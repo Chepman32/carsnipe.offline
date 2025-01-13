@@ -85,10 +85,15 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
         
         // Check for and award "First One" achievement if this is the first bid
         if (userBidded.length === 0) {
-          await checkAndUpdateAchievements(playerInfo); // Award achievements first if applicable
+          await checkAndUpdateAchievements(playerInfo); // Award achievements if applicable
         }
         
-        let increasedBidValue = Math.floor(auction.currentBid * 1.1) || Math.round(auction.minBid * 1.1);
+        let increasedBidValue;
+        if (!auction.currentBid || auction.currentBid === auction.minBid) {
+          increasedBidValue = auction.minBid;
+        } else {
+          increasedBidValue = Math.floor(auction.currentBid * 1.1);
+        }
   
         if (increasedBidValue >= auction.buy) {
           await buyItem();
@@ -159,6 +164,7 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
       setAuctionActionsVisible(false);
     }
   };
+  
   const buyItem = async () => {
     try {
         if (money < selectedAuction.buy) {

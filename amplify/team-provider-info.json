@@ -29,6 +29,10 @@
         "paymentsHandler": {
           "deploymentBucketName": "amplify-carsnipeonline-main-9dee2-deployment",
           "s3Key": "amplify-builds/paymentsHandler-75706a494b4651434e49-build.zip"
+        },
+        "auctionsManager": {
+          "deploymentBucketName": "amplify-carsnipeonline-main-9dee2-deployment",
+          "s3Key": "amplify-builds/auctionsManager-494a696d2b6c2f324645-build.zip"
         }
       }
     }

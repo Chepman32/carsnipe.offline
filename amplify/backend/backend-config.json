@@ -67,6 +67,11 @@
     }
   },
   "function": {
+    "auctionsManager": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
     "paymentsHandler": {
       "build": true,
       "providerPlugin": "awscloudformation",
@@ -103,6 +108,22 @@
         {
           "category": "auth",
           "resourceName": "carsnipeonline80e1a7fb"
+        }
+      ]
+    },
+    "AMPLIFY_function_auctionsManager_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "auctionsManager"
+        }
+      ]
+    },
+    "AMPLIFY_function_auctionsManager_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "auctionsManager"
         }
       ]
     },
