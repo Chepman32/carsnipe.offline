@@ -236,12 +236,18 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
             break;
           }
           case "ArrowUp": {
-            // Only jump to header if we're at index 0 in the global list
-            // Otherwise, move up a row (or to the previous make if needed)
-            if (selectedCarIndex === 0) {
+            const carsByMake = groupCarsByMake(cars);
+    const sortedMakes = Object.keys(carsByMake).sort();
+    const firstMake = sortedMakes[0];
+    const firstMakeCars = carsByMake[firstMake];
+    if (firstMakeCars.some((car) => car.id === focusedCar.id)) {
+      dispatch(setCurrentFocusedElement(TOP_CAR));
+    }
+            if (currentFocusedElement === TOP_CAR) {
               dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
               dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
-            } else {
+            }
+            else {
               const prevRowStartIndex = currentMakeStartIndex + (currentRow - 1) * itemsPerRow;
               if (currentRow > 0) {
                 const prevIndex = Math.min(
