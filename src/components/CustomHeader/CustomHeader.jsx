@@ -1,5 +1,3 @@
-// File: src/components/CustomHeader/CustomHeader.js
-
 import React, { useEffect, useRef, useState } from 'react';
 import { Menu, Typography, Drawer, Button } from 'antd';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -32,6 +30,8 @@ import {
   playNextStation,
   playPreviousStation
 } from '../../redux/slices/musicPlayerSlice';
+import fastForward from "../../assets/icons/fast-forward.png"
+import rewind from "../../assets/icons/rewind.png"
 
 const { Text, Title } = Typography;
 
@@ -340,7 +340,7 @@ const CustomHeader = ({ nickname, avatar, money }) => {
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   <img
-                    src="https://cdn2.vectorstock.com/i/1000x1000/90/36/back-play-button-icon-fast-backward-vector-46459036.jpg"
+                    src={rewind}
                     alt="Previous Station"
                     style={{ width: '24px', height: '24px' }}
                   />
@@ -350,7 +350,7 @@ const CustomHeader = ({ nickname, avatar, money }) => {
                   style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                 >
                   <img
-                    src="https://cdn-icons-png.flaticon.com/512/10279/10279033.png"
+                    src={fastForward}
                     alt="Next Station"
                     style={{ width: '24px', height: '24px' }}
                   />

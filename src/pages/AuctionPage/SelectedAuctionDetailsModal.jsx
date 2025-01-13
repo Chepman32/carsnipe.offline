@@ -9,7 +9,7 @@ import { SelectedAuctionDetails } from "./SelectedAuctionDetails";
 
 const getImageSource = (make, model) => {
     const imageName = `${make} ${model}.png`;
-    return require(`../../assets/images/${imageName}`);
+    return require(`../../assets/images/cars/${imageName}`);
   };
 
 export const SelectedAuctionDetailsModal = ({ visible, close, selectedAuction, handleAuctionActionsShow }) => {

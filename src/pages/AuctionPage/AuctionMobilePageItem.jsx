@@ -4,7 +4,7 @@ import "./auctionPage.css"; // Ensure this file contains mobile-specific styles
 
 const getImageSource = (make, model) => {
     const imageName = `${make} ${model}.png`;
-    return require(`../../assets/images/${imageName}`);
+    return require(`../../assets/images/cars/${imageName}`);
 };
 
 export default function AuctionMobilePageItem({ auction, handleItemClick }) {

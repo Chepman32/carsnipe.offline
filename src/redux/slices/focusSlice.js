@@ -1,3 +1,5 @@
+// File: src/redux/slices/focusSlice.js
+
 import { createSlice } from "@reduxjs/toolkit";
 
 export const FOCUS_ZONES = {
@@ -14,7 +16,6 @@ export const HEADER_MY_CARS = "HEADER_MY_CARS";
 export const HEADER_AUCTIONS = "HEADER_AUCTIONS";
 export const HEADER_STORE = "HEADER_STORE";
 export const HEADER_PROFILE = "HEADER_PROFILE";
-export const QUICK_MENU_STATION = "QUICK_MENU_STATION";
 export const HEADER_LAST_OPTION = "HEADER_LAST_OPTION";
 
 export const SETTINGS_DARK_MODE = "SETTINGS_DARK_MODE";
@@ -26,6 +27,7 @@ export const TOP_CAR = "TOP_CAR";
 export const QUICK_MENU_DARK_MODE = "QUICK_MENU_DARK_MODE";
 export const QUICK_MENU_MUSIC = "QUICK_MENU_MUSIC";
 export const QUICK_MENU_SOUND = "QUICK_MENU_SOUND";
+export const QUICK_MENU_STATION = "QUICK_MENU_STATION";
 
 const initialState = {
   focusedZone: FOCUS_ZONES.PAGE,
@@ -39,6 +41,7 @@ const initialState = {
   settingsNeedsToggle: null,
   settingsVolumeChange: 0,
   isQuickMenuOpen: false,
+  stationNeedsChange: null, // New field to track next/previous station requests
 };
 
 const focusSlice = createSlice({
@@ -48,10 +51,8 @@ const focusSlice = createSlice({
     handleKeyDown(state, action) {
       const key = action.payload;
       switch (state.focusedZone) {
-        case FOCUS_ZONES.HEADER:
-          if (key === "ArrowUp") {
-            // Handle ArrowUp if needed
-          } else if (key === "ArrowLeft") {
+        case FOCUS_ZONES.HEADER: {
+          if (key === "ArrowLeft") {
             if (state.currentFocusedElement === HEADER_CARS_STORE) {
               state.currentFocusedElement = HEADER_MAIN_MENU;
             } else if (state.currentFocusedElement === HEADER_MY_CARS) {
@@ -82,15 +83,13 @@ const focusSlice = createSlice({
               state.currentQuickMenuItem = QUICK_MENU_DARK_MODE;
               return;
             }
-            if (state.currentRoute === "/carsStore") {
+            if (state.currentRoute === "/carsStore" || state.currentRoute === "/mycars") {
               state.focusedZone = FOCUS_ZONES.PAGE;
               state.currentFocusedElement = TOP_CAR;
-            }
-            if (state.currentRoute === "/store") {
+            } else if (state.currentRoute === "/store") {
               state.focusedZone = FOCUS_ZONES.STORE;
               state.storeFocusedIndex = 0;
-            }
-            if (state.currentRoute === "/profileEditPage") {
+            } else if (state.currentRoute === "/profileEditPage") {
               state.focusedZone = FOCUS_ZONES.PAGE;
               state.currentFocusedElement = "avatars";
             }
@@ -104,22 +103,20 @@ const focusSlice = createSlice({
             }
           }
           break;
-        case FOCUS_ZONES.PAGE:
-          if (key === "ArrowUp") {
-            // Handle ArrowUp if needed
-          } else if (key === "ArrowDown") {
+        }
+        case FOCUS_ZONES.PAGE: {
+          if (key === "ArrowDown") {
             if (state.currentFocusedElement === TOP_CAR) {
               state.currentFocusedElement = "";
             }
           }
           break;
-        case FOCUS_ZONES.SETTINGS:
+        }
+        case FOCUS_ZONES.SETTINGS: {
           if (key === "ArrowUp") {
             if (state.currentSettingsElement === SETTINGS_MUSIC_VOLUME) {
               state.currentSettingsElement = SETTINGS_SOUND_EFFECTS;
-            } else if (
-              state.currentSettingsElement === SETTINGS_SOUND_EFFECTS
-            ) {
+            } else if (state.currentSettingsElement === SETTINGS_SOUND_EFFECTS) {
               state.currentSettingsElement = SETTINGS_DARK_MODE;
               state.currentFocusedElement = SETTINGS_DARK_MODE;
             } else if (state.currentSettingsElement === SETTINGS_DARK_MODE) {
@@ -153,7 +150,8 @@ const focusSlice = createSlice({
             }
           }
           break;
-        case FOCUS_ZONES.QUICK_MENU:
+        }
+        case FOCUS_ZONES.QUICK_MENU: {
           if (key === "ArrowUp") {
             if (state.currentFocusedElement === QUICK_MENU_MUSIC) {
               state.currentFocusedElement = QUICK_MENU_DARK_MODE;
@@ -164,6 +162,9 @@ const focusSlice = createSlice({
             } else if (state.currentFocusedElement === QUICK_MENU_DARK_MODE) {
               state.focusedZone = FOCUS_ZONES.HEADER;
               state.currentFocusedElement = HEADER_PROFILE;
+            } else if (state.currentFocusedElement === QUICK_MENU_STATION) {
+              state.currentFocusedElement = QUICK_MENU_SOUND;
+              state.currentQuickMenuItem = QUICK_MENU_SOUND;
             }
           } else if (key === "ArrowDown") {
             if (state.currentFocusedElement === QUICK_MENU_DARK_MODE) {
@@ -173,25 +174,38 @@ const focusSlice = createSlice({
               state.currentFocusedElement = QUICK_MENU_SOUND;
               state.currentQuickMenuItem = QUICK_MENU_SOUND;
             } else if (state.currentFocusedElement === QUICK_MENU_SOUND) {
+              state.currentFocusedElement = QUICK_MENU_STATION;
+              state.currentQuickMenuItem = QUICK_MENU_STATION;
+            } else if (state.currentFocusedElement === QUICK_MENU_STATION) {
               state.focusedZone = FOCUS_ZONES.PAGE;
-              state.currentFocusedElement =
-                state.currentRoute === "/carsStore"
-                  ? TOP_CAR
-                  : state.currentRoute === "/profileEditPage"
-                  ? "avatars"
-                  : state.currentRoute === "/store"
-                  ? "store"
-                  : state.currentRoute === "/settings"
-                  ? SETTINGS_DARK_MODE
-                  : "PAGE_MAIN_CONTENT";
+              if (state.currentRoute === "/carsStore") {
+                state.currentFocusedElement = TOP_CAR;
+              } else if (state.currentRoute === "/profileEditPage") {
+                state.currentFocusedElement = "avatars";
+              } else if (state.currentRoute === "/store") {
+                state.currentFocusedElement = "store";
+              } else if (state.currentRoute === "/settings") {
+                state.currentFocusedElement = SETTINGS_DARK_MODE;
+              } else {
+                state.currentFocusedElement = "PAGE_MAIN_CONTENT";
+              }
               state.currentQuickMenuItem = null;
+            }
+          } else if (key === "ArrowLeft") {
+            if (state.currentFocusedElement === QUICK_MENU_STATION) {
+              state.stationNeedsChange = "previous";
+            }
+          } else if (key === "ArrowRight") {
+            if (state.currentFocusedElement === QUICK_MENU_STATION) {
+              state.stationNeedsChange = "next";
             }
           } else if (key === "Escape") {
             state.focusedZone = FOCUS_ZONES.HEADER;
             state.currentFocusedElement = HEADER_PROFILE;
           }
           break;
-        case FOCUS_ZONES.STORE:
+        }
+        case FOCUS_ZONES.STORE: {
           if (key === "ArrowLeft") {
             state.storeFocusedIndex = Math.max(state.storeFocusedIndex - 1, 0);
           } else if (key === "ArrowRight") {
@@ -206,10 +220,9 @@ const focusSlice = createSlice({
             if (state.currentRoute === "/carsStore") {
               state.currentFocusedElement = TOP_CAR;
             }
-          } else if (key === "Enter") {
-            // Handle Enter key in STORE zone if needed
           }
           break;
+        }
         default:
           break;
       }
@@ -245,6 +258,9 @@ const focusSlice = createSlice({
     setIsQuickMenuOpen: (state, action) => {
       state.isQuickMenuOpen = action.payload;
     },
+    setStationNeedsChange: (state, action) => {
+      state.stationNeedsChange = action.payload;
+    },
   },
 });
 
@@ -259,6 +275,7 @@ export const {
   setSettingsNeedsToggle,
   setSettingsVolumeChange,
   setIsQuickMenuOpen,
+  setStationNeedsChange,
 } = focusSlice.actions;
 
 export default focusSlice.reducer;

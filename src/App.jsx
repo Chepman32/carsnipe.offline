@@ -5,7 +5,7 @@ import { generateClient } from "aws-amplify/api";
 import { getCurrentUser } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { Authenticator } from "@aws-amplify/ui-react";
-import { HashRouter as Router, Route, Routes, useNavigate } from "react-router-dom";
+import { HashRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { Spin } from 'antd';
 import { Provider } from 'react-redux';
 import store from './redux/store';
@@ -42,7 +42,17 @@ function BackspaceHandler() {
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === "Backspace") {
-        navigate(-1); // Navigate back to the previous page
+        const activeElement = document.activeElement;
+        const isInputFocused =
+          activeElement &&
+          (activeElement.tagName === "INPUT" ||
+            activeElement.tagName === "TEXTAREA" ||
+            activeElement.isContentEditable);
+
+        if (!isInputFocused) {
+          event.preventDefault(); // Prevent default Backspace behavior
+          navigate(-1); // Navigate back to the previous page
+        }
       }
     };
 
@@ -165,7 +175,7 @@ export default function App() {
   }
 
   return (
-    <Router>
+    <HashRouter>
       <BackspaceHandler />
       <div className={playerInfo == null || playerInfo === undefined ? "auth-container" : ""}>
         <div className={playerInfo == null || playerInfo === undefined ? "auth-left" : ""} />
@@ -258,7 +268,7 @@ export default function App() {
                           />
                           <Route
                             path="/achievements"
-                            element={<AchievementList userId={playerInfo?.id} />}
+                            element={<AchievementList userId={playerInfo.id} />}
                           />
                           <Route 
                             path="/paymentError" 
@@ -301,6 +311,6 @@ export default function App() {
           }
         </div>
       </div>
-    </Router>
+    </HashRouter>
   );
 }
