@@ -258,7 +258,6 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
             const sortedMakes = Object.keys(carsByMakeInner).sort();
             const firstMake = sortedMakes[0];
             const firstMakeCars = carsByMakeInner[firstMake];
-            const firstMakeStartIndex = cars.indexOf(firstMakeCars[0]);
             if (focusedCar && firstMakeCars.some((car, idx) => idx < itemsPerRowLocal && car.id === focusedCar.id)) {
               dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
               dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));

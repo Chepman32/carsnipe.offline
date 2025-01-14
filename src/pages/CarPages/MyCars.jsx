@@ -55,7 +55,7 @@ const MyCars = ({ playerInfo }) => {
 
   const soundEffectsOnQuickSettings = useSelector((state) => state.quickSettings.soundEffectsOn);
   const soundEffectsOn = useSelector((state) => state.mainSettings.soundEffectsOn);
-  const { focusedZone, currentFocusedElement } = useSelector((state) => state.focus);
+  const { focusedZone } = useSelector((state) => state.focus);
 
   const dispatch = useDispatch();
   const [form] = Form.useForm();
@@ -149,7 +149,6 @@ const MyCars = ({ playerInfo }) => {
     if (carDetailsVisible || newAuctionvisible || focusedZone === FOCUS_ZONES.HEADER) return;
 
     const itemsPerRow = getItemsPerRow();
-    const totalItems = flatCars.length;
     if (!flatCars.length) return;
 
     // Identify current item
@@ -241,13 +240,14 @@ const MyCars = ({ playerInfo }) => {
       case "ArrowUp": {
         // If we're in the top row of the top make, go to header
         const topMake = sortedMakes[0];
-        const topMakeCars = groupedCars[topMake];
         // If in top row of top make
         if (
           currentMake === topMake &&
           currentRow === 0
         ) {
           // If user is at any item in that first row, go to header
+          setFocusedCar(null);
+          dispatch(setIsTopCar(false));
           dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
           dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
           return;
@@ -395,7 +395,7 @@ const MyCars = ({ playerInfo }) => {
           const group = groupedCars[make];
           return (
             <div key={make}>
-              <h2>{make}</h2>
+              <h2 className="make-name">{make}</h2>
               <div
                 style={{
                   width: "100%",

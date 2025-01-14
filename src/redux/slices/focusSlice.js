@@ -181,7 +181,7 @@ const focusSlice = createSlice({
               state.currentQuickMenuItem = QUICK_MENU_STATION;
             } else if (state.currentFocusedElement === QUICK_MENU_STATION) {
               state.focusedZone = FOCUS_ZONES.PAGE;
-              if (state.currentRoute === "/carsStore") {
+              if (state.currentRoute === "/carsStore" || state.currentRoute === "/myCars") {
                 state.currentFocusedElement = TOP_CAR;
               } else if (state.currentRoute === "/profileEditPage") {
                 state.currentFocusedElement = "avatars";
