@@ -32,38 +32,19 @@
     }
   },
   "auth": {
-    "carsnipeonline80e1a7fb": {
+    "carsnipeonline38d80b0f": {
       "customAuth": false,
       "dependsOn": [],
       "providerPlugin": "awscloudformation",
       "service": "Cognito",
       "serviceType": "imported"
     },
-    "carsnipeonlinea9a53f6c": {
+    "carsnipeonline80e1a7fb": {
       "customAuth": false,
       "dependsOn": [],
-      "frontendAuthConfig": {
-        "mfaConfiguration": "OFF",
-        "mfaTypes": [
-          "SMS"
-        ],
-        "passwordProtectionSettings": {
-          "passwordPolicyCharacters": [],
-          "passwordPolicyMinLength": 8
-        },
-        "signupAttributes": [
-          "EMAIL"
-        ],
-        "socialProviders": [],
-        "usernameAttributes": [
-          "EMAIL"
-        ],
-        "verificationMechanisms": [
-          "EMAIL"
-        ]
-      },
       "providerPlugin": "awscloudformation",
-      "service": "Cognito"
+      "service": "Cognito",
+      "serviceType": "imported"
     }
   },
   "function": {
@@ -79,6 +60,38 @@
     }
   },
   "parameters": {
+    "AMPLIFY_auth_carsnipeonline38d80b0f_nativeClientId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "carsnipeonline38d80b0f"
+        }
+      ]
+    },
+    "AMPLIFY_auth_carsnipeonline38d80b0f_userPoolId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "carsnipeonline38d80b0f"
+        }
+      ]
+    },
+    "AMPLIFY_auth_carsnipeonline38d80b0f_userPoolName": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "carsnipeonline38d80b0f"
+        }
+      ]
+    },
+    "AMPLIFY_auth_carsnipeonline38d80b0f_webClientId": {
+      "usedBy": [
+        {
+          "category": "auth",
+          "resourceName": "carsnipeonline38d80b0f"
+        }
+      ]
+    },
     "AMPLIFY_auth_carsnipeonline80e1a7fb_nativeClientId": {
       "usedBy": [
         {

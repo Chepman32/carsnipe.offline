@@ -19,7 +19,12 @@
           "webClientId": "58kasgbt6bd86tlegvtqi8gmdm",
           "nativeClientId": "hi1akgtfntj8ghdqsqasaghmm"
         },
-        "carsnipeonlinea9a53f6c": {}
+        "carsnipeonline38d80b0f": {
+          "userPoolId": "us-east-2_9v4nJ1ELV",
+          "userPoolName": "User pool - carsnipe",
+          "webClientId": "4136c57v37d6l2n9vk22as28q1",
+          "nativeClientId": "4136c57v37d6l2n9vk22as28q1"
+        }
       },
       "api": {
         "carsnipeonline": {},
