@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Form, message, Typography, Spin } from "antd";
 import { generateClient } from 'aws-amplify/api';
 import { listCars as listCarsQuery } from '../../graphql/queries';
@@ -28,6 +28,16 @@ import {
 
 const client = generateClient();
 
+function getItemsPerRow() {
+  const windowWidth = window.innerWidth;
+  if (windowWidth <= 512) return 1;
+  if (windowWidth <= 768) return 2;
+  if (windowWidth <= 900) return 2;
+  if (windowWidth <= 1200) return 3;
+  if (windowWidth <= 1600) return 4;
+  return 5;
+}
+
 const MyCars = ({ playerInfo }) => {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,34 +61,49 @@ const MyCars = ({ playerInfo }) => {
   const [form] = Form.useForm();
   const scroller = useRef(null);
 
-  // ADDED: group cars by make
+  // Group cars by make, flatten for indexing
   const groupedCars = React.useMemo(() => {
     const grouped = {};
     cars.forEach((item) => {
-      const mk = item.car.make;
+      const mk = item.car.make || "UNKNOWN";
       if (!grouped[mk]) grouped[mk] = [];
       grouped[mk].push(item);
     });
     return grouped;
   }, [cars]);
 
+  // Flatten them in a consistent, make-by-make array for indexing
+  const flatCars = React.useMemo(() => {
+    const makes = Object.keys(groupedCars).sort();
+    let result = [];
+    makes.forEach((mk) => {
+      result = [...result, ...groupedCars[mk]];
+    });
+    return result;
+  }, [groupedCars]);
+
+  // Check if top car
   useEffect(() => {
-    // CHANGED: Compare cars[0]?.car?.id to focusedCar?.id
-    if (cars[0]?.car?.id === focusedCar?.id) {
+    if (!focusedCar || flatCars.length === 0) {
+      dispatch(setIsTopCar(false));
+      return;
+    }
+    // Compare with first item in the flattened array
+    if (flatCars[0].car.id === focusedCar.id) {
       dispatch(setIsTopCar(true));
     } else {
       dispatch(setIsTopCar(false));
     }
-  }, [selectedCar, cars, focusedCar, dispatch]);
+  }, [focusedCar, flatCars, dispatch]);
 
   useEffect(() => {
     if (focusedZone === FOCUS_ZONES.PAGE && !focusedCar && cars.length > 0) {
-      setFocusedCar(cars[0].car);
+      setFocusedCar(flatCars[0].car);
       setSelectedCarIndex(0);
     } else if (focusedZone === FOCUS_ZONES.HEADER && focusedCar) {
       setFocusedCar(null);
     }
-  }, [focusedZone, focusedCar, cars]);
+  }, [focusedZone, focusedCar, cars, flatCars]);
 
   useEffect(() => {
     if (focusedCar) {
@@ -112,106 +137,187 @@ const MyCars = ({ playerInfo }) => {
     if (focusedZone !== FOCUS_ZONES.HEADER) {
       dispatch(setCurrentFocusedElement(TOP_CAR));
     }
-  }, [dispatch]);
+  }, [dispatch, focusedZone]);
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      const { key } = event;
-      if (carDetailsVisible || newAuctionvisible || focusedZone === FOCUS_ZONES.HEADER) return;
+  // Show details modal
+  const showCarDetailsModal = useCallback(() => {
+    setCarDetailsVisible(true);
+  }, []);
 
-      const getItemsPerRow = () => {
-        const windowWidth = window.innerWidth;
-        if (windowWidth <= 512) return 1;
-        if (windowWidth <= 768) return 2;
-        if (windowWidth <= 900) return 2;
-        if (windowWidth <= 1200) return 3;
-        if (windowWidth <= 1600) return 4;
-        return 5;
-      };
+  const handleKeyDown = useCallback((event) => {
+    const { key } = event;
+    if (carDetailsVisible || newAuctionvisible || focusedZone === FOCUS_ZONES.HEADER) return;
 
-      const itemsPerRow = getItemsPerRow();
-      const totalItems = cars.length;
-      const currentRow = Math.floor(selectedCarIndex / itemsPerRow);
+    const itemsPerRow = getItemsPerRow();
+    const totalItems = flatCars.length;
+    if (!flatCars.length) return;
 
-      const scrollDistance = scroller.current ? scroller.current.scrollHeight * 0.04 : 0;
+    // Identify current item
+    const currentItem = flatCars[selectedCarIndex];
+    if (!currentItem) return;
 
-      switch (key) {
-        case "ArrowRight": {
-          if (selectedCarIndex < totalItems - 1) {
-            setSelectedCarIndex(prev => prev + 1);
-            setFocusedCar(cars[selectedCarIndex + 1].car);
-            if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
-          }
-          break;
-        }
-        case "ArrowLeft": {
-          if (selectedCarIndex > 0) {
-            setSelectedCarIndex(prev => prev - 1);
-            setFocusedCar(cars[selectedCarIndex - 1].car);
-            if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
-          }
-          break;
-        }
-        case "ArrowDown": {
-          const nextRowIndex = selectedCarIndex + itemsPerRow;
-          if (nextRowIndex < totalItems) {
-            setSelectedCarIndex(nextRowIndex);
-            setFocusedCar(cars[nextRowIndex].car);
-            if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
-            if (scroller.current) {
-              scroller.current.scrollBy({
-                top: scrollDistance,
-                behavior: "smooth"
-              });
-            }
-          }
-          break;
-        }
-        case "ArrowUp": {
-          if (selectedCarIndex === 0) {
-            dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
-            dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
-          } else {
-            const prevRowIndex = selectedCarIndex - itemsPerRow;
-            if (prevRowIndex >= 0) {
-              setSelectedCarIndex(prevRowIndex);
-              setFocusedCar(cars[prevRowIndex].car);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
-              if (scroller.current) {
-                scroller.current.scrollBy({
-                  top: -scrollDistance,
-                  behavior: "smooth"
-                });
-              }
-            }
-          }
-          break;
-        }
-        case "Enter": {
-          setSelectedCar(cars[selectedCarIndex]?.car);
-          if (soundEffectsOn || soundEffectsOnQuickSettings) playOpeningSound();
-          showCarDetailsModal();
-          break;
-        }
-        default:
-          break;
+    // Group by make (already have groupedCars)
+    const sortedMakes = Object.keys(groupedCars).sort();
+
+    // Find which make the current item is in
+    let currentMake = "";
+    let currentMakeStartIndex = 0;
+    let positionInMake = 0;
+
+    for (const mk of sortedMakes) {
+      const arr = groupedCars[mk];
+      const startIndex = flatCars.indexOf(arr[0]);
+      const endIndex = startIndex + arr.length - 1;
+      if (selectedCarIndex >= startIndex && selectedCarIndex <= endIndex) {
+        currentMake = mk;
+        currentMakeStartIndex = startIndex;
+        positionInMake = selectedCarIndex - startIndex;
+        break;
       }
-    };
+    }
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    const currentMakeCars = groupedCars[currentMake] || [];
+    const currentMakeLength = currentMakeCars.length;
+    const currentMakeIndexInSorted = sortedMakes.indexOf(currentMake);
+
+    const currentRow = Math.floor(positionInMake / itemsPerRow);
+    const positionInRow = positionInMake % itemsPerRow;
+
+    const scrollerElement = scroller.current;
+    const scrollDistance = scrollerElement ? scrollerElement.scrollHeight * 0.04 : 0;
+
+    switch (key) {
+      case "ArrowRight": {
+        // Move within the same make row if possible
+        if (positionInRow < itemsPerRow - 1 && positionInMake < currentMakeLength - 1) {
+          const newIndex = selectedCarIndex + 1;
+          setSelectedCarIndex(newIndex);
+          setFocusedCar(flatCars[newIndex].car);
+          if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+        }
+        break;
+      }
+      case "ArrowLeft": {
+        // Move within the same make row if possible
+        if (positionInRow > 0) {
+          const newIndex = selectedCarIndex - 1;
+          setSelectedCarIndex(newIndex);
+          setFocusedCar(flatCars[newIndex].car);
+          if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+        }
+        break;
+      }
+      case "ArrowDown": {
+        // Try moving down in the same make
+        const nextRowStartIndex = currentMakeStartIndex + (currentRow + 1) * itemsPerRow;
+        if (currentRow < Math.floor((currentMakeLength - 1) / itemsPerRow)) {
+          // Move inside current make
+          const nextIndex = Math.min(
+            nextRowStartIndex + positionInRow,
+            currentMakeStartIndex + currentMakeLength - 1
+          );
+          setSelectedCarIndex(nextIndex);
+          setFocusedCar(flatCars[nextIndex].car);
+          if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+        } else {
+          // Move to the next make if possible
+          if (currentMakeIndexInSorted < sortedMakes.length - 1) {
+            const nextMake = sortedMakes[currentMakeIndexInSorted + 1];
+            const nextMakeStartIndex = flatCars.indexOf(groupedCars[nextMake][0]);
+            setSelectedCarIndex(nextMakeStartIndex);
+            setFocusedCar(flatCars[nextMakeStartIndex].car);
+            if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+          }
+        }
+        // Scroll
+        if (scrollerElement) {
+          scrollerElement.scrollBy({
+            top: scrollDistance,
+            behavior: "smooth"
+          });
+        }
+        break;
+      }
+      case "ArrowUp": {
+        // If we're in the top row of the top make, go to header
+        const topMake = sortedMakes[0];
+        const topMakeCars = groupedCars[topMake];
+        // If in top row of top make
+        if (
+          currentMake === topMake &&
+          currentRow === 0
+        ) {
+          // If user is at any item in that first row, go to header
+          dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
+          dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
+          return;
+        }
+        // Otherwise, move up in the same make
+        if (currentRow > 0) {
+          const prevRowStartIndex = currentMakeStartIndex + (currentRow - 1) * itemsPerRow;
+          const prevIndex = Math.min(
+            prevRowStartIndex + positionInRow,
+            currentMakeStartIndex + currentMakeLength - 1
+          );
+          setSelectedCarIndex(prevIndex);
+          setFocusedCar(flatCars[prevIndex].car);
+          if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+        } else {
+          // Move up to previous make
+          if (currentMakeIndexInSorted > 0) {
+            const prevMake = sortedMakes[currentMakeIndexInSorted - 1];
+            const prevMakeCars = groupedCars[prevMake];
+            const prevMakeStartIndex = flatCars.indexOf(prevMakeCars[0]);
+            const lastRowIndex = Math.floor((prevMakeCars.length - 1) / itemsPerRow);
+            const lastRowStartIndex = prevMakeStartIndex + lastRowIndex * itemsPerRow;
+            const targetIndex = Math.min(
+              lastRowStartIndex + positionInRow,
+              prevMakeStartIndex + prevMakeCars.length - 1
+            );
+            setSelectedCarIndex(targetIndex);
+            setFocusedCar(flatCars[targetIndex].car);
+            if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+          }
+        }
+        // Scroll
+        if (scrollerElement) {
+          scrollerElement.scrollBy({
+            top: -scrollDistance,
+            behavior: "smooth"
+          });
+        }
+        break;
+      }
+      case "Enter": {
+        // Show details
+        setSelectedCar(flatCars[selectedCarIndex]?.car);
+        if (soundEffectsOn || soundEffectsOnQuickSettings) playOpeningSound();
+        showCarDetailsModal();
+        break;
+      }
+      default:
+        break;
+    }
   }, [
-    cars,
-    selectedCarIndex,
     carDetailsVisible,
     newAuctionvisible,
+    focusedZone,
+    flatCars,
+    groupedCars,
+    selectedCarIndex,
+    dispatch,
     soundEffectsOn,
     soundEffectsOnQuickSettings,
-    focusedZone,
-    dispatch
+    showCarDetailsModal
   ]);
 
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
+
   const createNewAuction = async () => {
+    if (!selectedCar) return;
     const auctionDurationSeconds = auctionDuration * 60 * 60;
     const currentTimeInSeconds = Math.floor(Date.now() / 1000);
     const endTime = currentTimeInSeconds + auctionDurationSeconds;
@@ -255,11 +361,11 @@ const MyCars = ({ playerInfo }) => {
     } finally {
       setLoadingNewAuction(false);
       setNewAuctionVisible(false);
-      setSelectedCarIndex((prev) => (cars.length > prev ? prev - 1 : 0));
+      setSelectedCarIndex((prev) => (cars.length > 0 && prev > 0 ? prev - 1 : 0));
     }
   };
 
-  const showCarDetailsModal = () => {
+  const showCarDetailsModalExternal = () => {
     setCarDetailsVisible(true);
   };
 
@@ -284,29 +390,38 @@ const MyCars = ({ playerInfo }) => {
       {loading ? (
         <Spin size="large" fullscreen />
       ) : cars && cars.length ? (
-        // CHANGED: Instead of cars.map, render groups by make
-        Object.keys(groupedCars).map((make) => {
+        // Render grouped cars by make
+        Object.keys(groupedCars).sort().map((make) => {
           const group = groupedCars[make];
           return (
             <div key={make}>
               <h2>{make}</h2>
-              <div style={{ width: "100%", display: 'flex', flexDirection: 'row', flexWrap: "wrap" }}>
+              <div
+                style={{
+                  width: "100%",
+                  display: 'flex',
+                  flexDirection: 'row',
+                  flexWrap: "wrap"
+                }}
+              >
                 {group.map((carItem) => {
-                  // Find this car’s global index for focus logic
-                  const realIndex = cars.findIndex(
+                  // Find absolute index in flattened array
+                  const realIndex = flatCars.findIndex(
                     (c) => c.car.id === carItem.car.id
                   );
                   return (
                     <CarCard
                       key={carItem.car.id}
                       focusedCar={focusedCar}
-                      selectedCar={realIndex === selectedCarIndex ? carItem.car : null}
+                      selectedCar={
+                        realIndex === selectedCarIndex ? carItem.car : null
+                      }
                       setSelectedCar={(car) => {
                         setSelectedCar(car);
                         setSelectedCarIndex(realIndex);
-                        showCarDetailsModal();
+                        showCarDetailsModalExternal();
                       }}
-                      showCarDetailsModal={showCarDetailsModal}
+                      showCarDetailsModal={showCarDetailsModalExternal}
                       car={carItem.car}
                       getImageSource={getImageSource}
                     />

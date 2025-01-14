@@ -85,7 +85,8 @@ const focusSlice = createSlice({
               state.currentQuickMenuItem = QUICK_MENU_DARK_MODE;
               return;
             }
-            if (state.currentRoute === "/carsStore" || state.currentRoute === "/mycars") {
+            if (state.currentRoute === "/carsStore" || state.currentRoute === "/myCars") {
+              console.log("myCars")
               state.focusedZone = FOCUS_ZONES.PAGE;
               state.currentFocusedElement = TOP_CAR;
             } else if (state.currentRoute === "/store") {
