@@ -1,11 +1,8 @@
-// CarsStore.js
-
 import React, { useState, useEffect, useCallback } from "react";
 import { Button, Modal, Form, Input, message, Select, Spin } from "antd";
 import { generateClient } from "aws-amplify/api";
 import { listCars as listCarsQuery } from "../../graphql/queries";
 import * as mutations from "../../graphql/mutations";
-import "./carsPage.css";
 import CarDetailsModal from "./CarDetailsModal";
 import CarCard from "./CarCard";
 import {
@@ -25,9 +22,30 @@ import {
   setIsTopCar,
   TOP_CAR
 } from "../../redux/slices/focusSlice";
+import "./carsPage.css";
 
 const { Option } = Select;
 const client = generateClient();
+
+function getItemsPerRow() {
+  const windowWidth = window.innerWidth;
+  let itemWidth;
+  if (windowWidth <= 512) {
+    itemWidth = windowWidth * 0.95;
+  } else if (windowWidth <= 768) {
+    itemWidth = windowWidth * 0.48;
+  } else if (windowWidth <= 900) {
+    itemWidth = windowWidth * 0.48;
+  } else if (windowWidth <= 1200) {
+    itemWidth = windowWidth * 0.31;
+  } else if (windowWidth <= 1600) {
+    itemWidth = windowWidth * 0.23;
+  } else {
+    itemWidth = windowWidth * 0.19;
+  }
+  const itemsPerRow = Math.floor((windowWidth - 40) / (itemWidth + 10));
+  return Math.max(1, itemsPerRow);
+}
 
 const CarsStore = ({ playerInfo, setMoney, money }) => {
   const [cars, setCars] = useState([]);
@@ -48,20 +66,36 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Mark isTopCar true if our currently "focused" car is index 0 in the entire array
-    if (cars[0]?.id === focusedCar?.id) {
+    if (!focusedCar || cars.length === 0) {
+      dispatch(setIsTopCar(false));
+      return;
+    }
+    const carsByMake = groupCarsByMake(cars);
+    const sortedMakes = Object.keys(carsByMake).sort();
+    if (sortedMakes.length === 0) {
+      dispatch(setIsTopCar(false));
+      return;
+    }
+    const firstMake = sortedMakes[0];
+    const firstMakeCars = carsByMake[firstMake];
+    if (!firstMakeCars || firstMakeCars.length === 0) {
+      dispatch(setIsTopCar(false));
+      return;
+    }
+    const itemsPerRow = getItemsPerRow();
+    const indexInFirstMake = firstMakeCars.findIndex((car) => car.id === focusedCar.id);
+    if (indexInFirstMake >= 0 && indexInFirstMake < itemsPerRow) {
       dispatch(setIsTopCar(true));
     } else {
       dispatch(setIsTopCar(false));
     }
-  }, [selectedCar, cars, focusedCar, dispatch]);
+  }, [cars, focusedCar, dispatch]);
 
   useEffect(() => {
     if (focusedZone === FOCUS_ZONES.PAGE && !focusedCar) {
       setFocusedCar(cars[0]);
       setSelectedCarIndex(0);
-    }
-    else if(focusedZone === FOCUS_ZONES.HEADER && focusedCar) {
+    } else if (focusedZone === FOCUS_ZONES.HEADER && focusedCar) {
       setFocusedCar(null);
     }
   }, [focusedZone, focusedCar, cars]);
@@ -71,8 +105,8 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
       const element = document.querySelector(`[data-car-id="${focusedCar.id}"]`);
       if (element) {
         element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
+          behavior: "smooth",
+          block: "nearest"
         });
       }
     }
@@ -146,52 +180,30 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
     const handleKeyDown = (event) => {
       const { key } = event;
       if (carDetailsVisible || focusedZone === FOCUS_ZONES.HEADER) return;
-
-      const getItemsPerRow = () => {
-        const windowWidth = window.innerWidth;
-        let itemWidth;
-        if (windowWidth <= 512) {
-          itemWidth = windowWidth * 0.95;
-        } else if (windowWidth <= 768) {
-          itemWidth = windowWidth * 0.48;
-        } else if (windowWidth <= 900) {
-          itemWidth = windowWidth * 0.48;
-        } else if (windowWidth <= 1200) {
-          itemWidth = windowWidth * 0.31;
-        } else if (windowWidth <= 1600) {
-          itemWidth = windowWidth * 0.23;
-        } else {
-          itemWidth = windowWidth * 0.19;
-        }
-        const itemsPerRow = Math.floor((windowWidth - 40) / (itemWidth + 10));
-        return Math.max(1, itemsPerRow);
-      };
-
-      const itemsPerRow = getItemsPerRow();
+      const itemsPerRowLocal = getItemsPerRow();
       const carsByMake = groupCarsByMake(cars);
       const makes = Object.keys(carsByMake);
-
       const currentMake = makes.find((make) => {
         const makeStartIndex = cars.indexOf(carsByMake[make][0]);
         const makeEndIndex = makeStartIndex + carsByMake[make].length - 1;
         return selectedCarIndex >= makeStartIndex && selectedCarIndex <= makeEndIndex;
       });
-
       const currentMakeCars = carsByMake[currentMake] || [];
       const currentMakeStartIndex = cars.indexOf(currentMakeCars[0]);
       const positionInMake = selectedCarIndex - currentMakeStartIndex;
-      const currentRow = Math.floor(positionInMake / itemsPerRow);
-      const positionInRow = positionInMake % itemsPerRow;
-
+      const currentRow = Math.floor(positionInMake / itemsPerRowLocal);
+      const positionInRow = positionInMake % itemsPerRowLocal;
       const scroller = document.getElementById("scroller");
       const scrollDistance = scroller ? scroller.scrollHeight * 0.04 : 0;
       if (focusedZone !== FOCUS_ZONES.QUICK_MENU) {
         switch (key) {
           case "ArrowRight": {
-            if (positionInRow < itemsPerRow - 1 && positionInMake < currentMakeCars.length - 1) {
+            if (positionInRow < itemsPerRowLocal - 1 && positionInMake < currentMakeCars.length - 1) {
               setSelectedCarIndex((prevIndex) => prevIndex + 1);
               setFocusedCar(cars[selectedCarIndex + 1]);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
             }
             break;
           }
@@ -199,7 +211,9 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
             if (positionInRow > 0) {
               setSelectedCarIndex((prevIndex) => prevIndex - 1);
               setFocusedCar(cars[selectedCarIndex - 1]);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
             }
             break;
           }
@@ -208,15 +222,17 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
               break;
             }
             dispatch(setFocusedZone(FOCUS_ZONES.PAGE));
-            const nextRowStartIndex = currentMakeStartIndex + (currentRow + 1) * itemsPerRow;
-            if (currentRow < Math.floor((currentMakeCars.length - 1) / itemsPerRow)) {
+            const nextRowStartIndex = currentMakeStartIndex + (currentRow + 1) * itemsPerRowLocal;
+            if (currentRow < Math.floor((currentMakeCars.length - 1) / itemsPerRowLocal)) {
               const nextIndex = Math.min(
                 nextRowStartIndex + positionInRow,
                 currentMakeStartIndex + currentMakeCars.length - 1
               );
               setSelectedCarIndex(nextIndex);
               setFocusedCar(cars[nextIndex]);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
             } else {
               const currentMakeIndex = makes.indexOf(currentMake);
               if (currentMakeIndex < makes.length - 1) {
@@ -224,7 +240,9 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
                 const nextMakeStartIndex = cars.indexOf(carsByMake[nextMake][0]);
                 setSelectedCarIndex(nextMakeStartIndex);
                 setFocusedCar(cars[nextMakeStartIndex]);
-                if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+                if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                  playSwitchSound();
+                }
               }
             }
             if (scroller) {
@@ -236,56 +254,59 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
             break;
           }
           case "ArrowUp": {
-            const carsByMake = groupCarsByMake(cars);
-    const sortedMakes = Object.keys(carsByMake).sort();
-    const firstMake = sortedMakes[0];
-    const firstMakeCars = carsByMake[firstMake];
-    if (firstMakeCars.some((car) => car.id === focusedCar.id)) {
-      dispatch(setCurrentFocusedElement(TOP_CAR));
-    }
-            if (currentFocusedElement === TOP_CAR) {
+            const carsByMakeInner = groupCarsByMake(cars);
+            const sortedMakes = Object.keys(carsByMakeInner).sort();
+            const firstMake = sortedMakes[0];
+            const firstMakeCars = carsByMakeInner[firstMake];
+            const firstMakeStartIndex = cars.indexOf(firstMakeCars[0]);
+            if (focusedCar && firstMakeCars.some((car, idx) => idx < itemsPerRowLocal && car.id === focusedCar.id)) {
               dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
               dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
+              return;
             }
-            else {
-              const prevRowStartIndex = currentMakeStartIndex + (currentRow - 1) * itemsPerRow;
-              if (currentRow > 0) {
-                const prevIndex = Math.min(
-                  prevRowStartIndex + positionInRow,
-                  currentMakeStartIndex + currentMakeCars.length - 1
+            if (currentRow > 0) {
+              const prevRowStartIndex = currentMakeStartIndex + (currentRow - 1) * itemsPerRowLocal;
+              const prevIndex = Math.min(
+                prevRowStartIndex + positionInRow,
+                currentMakeStartIndex + currentMakeCars.length - 1
+              );
+              setSelectedCarIndex(prevIndex);
+              setFocusedCar(cars[prevIndex]);
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
+            } else {
+              const currentMakeIndex = makes.indexOf(currentMake);
+              if (currentMakeIndex > 0) {
+                const prevMake = makes[currentMakeIndex - 1];
+                const prevMakeCars = carsByMakeInner[prevMake];
+                const prevMakeStartIndex = cars.indexOf(prevMakeCars[0]);
+                const lastRowIndex = Math.floor((prevMakeCars.length - 1) / itemsPerRowLocal);
+                const lastRowStartIndex = prevMakeStartIndex + lastRowIndex * itemsPerRowLocal;
+                const targetIndex = Math.min(
+                  lastRowStartIndex + positionInRow,
+                  prevMakeStartIndex + prevMakeCars.length - 1
                 );
-                setSelectedCarIndex(prevIndex);
-                setFocusedCar(cars[prevIndex]);
-                if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
-              } else {
-                const currentMakeIndex = makes.indexOf(currentMake);
-                if (currentMakeIndex > 0) {
-                  const prevMake = makes[currentMakeIndex - 1];
-                  const prevMakeCars = carsByMake[prevMake];
-                  const prevMakeStartIndex = cars.indexOf(prevMakeCars[0]);
-                  const lastRowIndex = Math.floor((prevMakeCars.length - 1) / itemsPerRow);
-                  const lastRowStartIndex = prevMakeStartIndex + lastRowIndex * itemsPerRow;
-                  const targetIndex = Math.min(
-                    lastRowStartIndex + positionInRow,
-                    prevMakeStartIndex + prevMakeCars.length - 1
-                  );
-                  setSelectedCarIndex(targetIndex);
-                  setFocusedCar(cars[targetIndex]);
-                  if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
+                setSelectedCarIndex(targetIndex);
+                setFocusedCar(cars[targetIndex]);
+                if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                  playSwitchSound();
                 }
               }
-              if (scroller) {
-                scroller.scrollBy({
-                  top: -scrollDistance,
-                  behavior: "smooth"
-                });
-              }
+            }
+            if (scroller) {
+              scroller.scrollBy({
+                top: -scrollDistance,
+                behavior: "smooth"
+              });
             }
             break;
           }
           case "Enter": {
-            setSelectedCar(cars[selectedCarIndex]);
-            if (soundEffectsOn || soundEffectsOnQuickSettings) playOpeningSound();
+            setSelectedCar(selectedCar);
+            if (soundEffectsOn || soundEffectsOnQuickSettings) {
+              playOpeningSound();
+            }
             showCarDetailsModal();
             break;
           }
@@ -308,12 +329,15 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
     focusedZone,
     dispatch,
     selectedCar,
-    focusedCar
+    focusedCar,
+    currentFocusedElement
   ]);
 
   const buyCar = async (car) => {
     if (playerInfo && playerInfo.id && money >= car.price) {
-      if (soundEffectsOn) playSwitchSound();
+      if (soundEffectsOn) {
+        playSwitchSound();
+      }
       setMoney((prevMoney) => prevMoney - car.price);
       try {
         setLoadingBuy(true);
@@ -345,12 +369,16 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
   };
 
   const handleCancel = () => {
-    if (soundEffectsOn || soundEffectsOnQuickSettings) playClosingSound();
+    if (soundEffectsOn || soundEffectsOnQuickSettings) {
+      playClosingSound();
+    }
     setVisible(false);
   };
 
   const handleCarDetailsCancel = () => {
-    if (soundEffectsOn) playClosingSound();
+    if (soundEffectsOn) {
+      playClosingSound();
+    }
     setCarDetailsVisible(false);
   };
 
@@ -380,7 +408,7 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
   return (
     <div className="cars">
       {carsLoading ? (
-        <Spin size="large" fullscreen />
+        <Spin size="large" />
       ) : (
         <div className="cars__container" id="scroller">
           {Object.entries(groupCarsByMake(cars)).map(([make, makeCars]) => {
