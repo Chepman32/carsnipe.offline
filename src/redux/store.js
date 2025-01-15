@@ -1,12 +1,11 @@
 // src/redux/store.js
 
-import { configureStore, getDefaultMiddleware } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // Defaults to localStorage for web
 import { all } from 'redux-saga/effects';
 
-// Import your reducers and sagas
 import musicPlayerReducer from './slices/musicPlayerSlice';
 import quickSettingsReducer from './slices/quickSettingsSlice';
 import mainSettingsReducer from './slices/mainSettingsSlice';
@@ -21,14 +20,42 @@ function* rootSaga() {
   ]);
 }
 
+// Persist config for mainSettings (unchanged)
 const mainSettingsPersistConfig = {
   key: 'mainSettings',
   storage,
-  whitelist: ['darkMode', 'musicVolume', 'soundEffectsOn'], // Updated to include 'soundEffectsOn'
+  whitelist: ['darkMode', 'soundEffectsOn'],
 };
 
-// Persisted Reducer for mainSettings
-const persistedMainSettingsReducer = persistReducer(mainSettingsPersistConfig, mainSettingsReducer);
+const quickSettingsPersistConfig = {
+  key: 'mainSettings',
+  storage,
+  whitelist: ['musicOn'],
+};
+
+const persistedMainSettingsReducer = persistReducer(
+  mainSettingsPersistConfig,
+  mainSettingsReducer
+);
+
+const persistedQuickSettingsReducer = persistReducer(
+  quickSettingsPersistConfig,
+  quickSettingsReducer
+);
+
+// NEW persist config for musicPlayer
+// Notice we are NOT whitelisting "isPlaying" so it won't be restored from storage
+const musicPlayerPersistConfig = {
+  key: 'musicPlayer',
+  storage,
+  whitelist: ['currentStation', 'currentTrack', 'tracks', 'loading', 'error'],
+};
+
+// Wrap the musicPlayer reducer
+const persistedMusicPlayerReducer = persistReducer(
+  musicPlayerPersistConfig,
+  musicPlayerReducer
+);
 
 // Create Saga Middleware
 const sagaMiddleware = createSagaMiddleware();
@@ -36,8 +63,9 @@ const sagaMiddleware = createSagaMiddleware();
 // Configure the Redux Store
 const store = configureStore({
   reducer: {
-    musicPlayer: musicPlayerReducer,
-    quickSettings: quickSettingsReducer,
+    // Use the persisted musicPlayer reducer
+    musicPlayer: persistedMusicPlayerReducer,
+    quickSettings: persistedQuickSettingsReducer,
     mainSettings: persistedMainSettingsReducer,
     focus: focusReducer
   },
