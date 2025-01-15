@@ -14,10 +14,10 @@ const awsmobile = {
             "region": "us-east-2"
         }
     ],
-    "aws_cognito_identity_pool_id": "us-east-2:c38f04c8-0c34-47c5-8457-4502d2ed0dcc",
+    "aws_cognito_identity_pool_id": "us-east-2:591e850c-b321-46bb-817c-03bce74bc858",
     "aws_cognito_region": "us-east-2",
-    "aws_user_pools_id": "us-east-2_KIU6AFqyM",
-    "aws_user_pools_web_client_id": "1sr97d6vsva8ad6h6bp85bnes3",
+    "aws_user_pools_id": "us-east-2_bKWiDZ1E9",
+    "aws_user_pools_web_client_id": "6dc9m3c0htdsobkjoqenc3jh4t",
     "oauth": {},
     "aws_cognito_username_attributes": [
         "EMAIL"
