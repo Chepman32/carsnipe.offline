@@ -1,8 +1,8 @@
 // src/redux/slices/musicPlayerSlice.js
 
-import { REHYDRATE } from 'redux-persist';
-import { createSlice } from '@reduxjs/toolkit';
-import { stations } from '../stations';
+import { REHYDRATE } from "redux-persist";
+import { createSlice } from "@reduxjs/toolkit";
+import { stations } from "../stations";
 
 const initialState = {
   currentStation: stations[0],
@@ -10,11 +10,11 @@ const initialState = {
   isPlaying: false,
   tracks: [],
   loading: false,
-  error: null
+  error: null,
 };
 
 const musicPlayerSlice = createSlice({
-  name: 'musicPlayer',
+  name: "musicPlayer",
   initialState,
   reducers: {
     loadTracksRequest(state) {
@@ -57,7 +57,9 @@ const musicPlayerSlice = createSlice({
       state.error = action.payload;
     },
     playNextStation(state) {
-      const currentIndex = stations.findIndex(s => s.id === state.currentStation.id);
+      const currentIndex = stations.findIndex(
+        (s) => s.id === state.currentStation.id
+      );
       const nextIndex = (currentIndex + 1) % stations.length;
       state.currentStation = stations[nextIndex];
       state.tracks = stations[nextIndex].tracks;
@@ -65,13 +67,15 @@ const musicPlayerSlice = createSlice({
       state.isPlaying = true; // Remove if you also don't want next-station auto-play
     },
     playPreviousStation(state) {
-      const currentIndex = stations.findIndex(s => s.id === state.currentStation.id);
+      const currentIndex = stations.findIndex(
+        (s) => s.id === state.currentStation.id
+      );
       const prevIndex = (currentIndex - 1 + stations.length) % stations.length;
       state.currentStation = stations[prevIndex];
       state.tracks = stations[prevIndex].tracks;
       state.currentTrack = stations[prevIndex].tracks[0] || null;
       state.isPlaying = true; // Remove if you also don't want previous-station auto-play
-    }
+    },
   },
   extraReducers: (builder) => {
     builder.addCase(REHYDRATE, (state, action) => {
@@ -85,7 +89,7 @@ const musicPlayerSlice = createSlice({
         state.isPlaying = false;
       }
     });
-  }
+  },
 });
 
 export const {
@@ -99,7 +103,7 @@ export const {
   switchStationSuccess,
   switchStationFailure,
   playNextStation,
-  playPreviousStation
+  playPreviousStation,
 } = musicPlayerSlice.actions;
 
 export default musicPlayerSlice.reducer;

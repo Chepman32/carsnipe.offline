@@ -1,0 +1,10 @@
+@import url("../../shared/darkTheme.css");
+
+.avatarImage {
+    width: 10rem;
+    height: 10rem;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 2rem;
+    margin-bottom: 5rem;
+}

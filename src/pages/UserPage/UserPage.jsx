@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Form, message, Typography, Spin } from "antd";
+import { Form, message, Typography, Spin, Flex } from "antd";
 import { generateClient } from 'aws-amplify/api';
 import * as mutations from '../../graphql/mutations';
-import { fetchUserCarsRequest, getUserCar, deleteUserCar, createNewAuctionUser, playSwitchSound, playOpeningSound, playClosingSound, fetchAuctionCreator, fetchUserInfoById } from "../../functions";
+import { fetchUserCarsRequest, getUserCar, deleteUserCar, createNewAuctionUser, playSwitchSound, playOpeningSound, playClosingSound, fetchAuctionCreator, fetchUserInfoById, selectAvatar } from "../../functions";
 import CarCard from "../CarPages/CarCard";
 import { useParams } from "react-router-dom";
-
-const client = generateClient();
+import './userPage.css';
 
 const UserPage = () => {
   const [userInfo, setUserInfo] = useState(null)
@@ -93,10 +92,15 @@ const UserPage = () => {
    const imageName = `${make} ${model}.png`;
    return require(`../../assets/images/cars/${imageName}`);
  };
+  
+ console.log('userInfo:', userInfo)
 
  return (
    <div style={{ padding: '20px' }}>
+     <Flex align="center">
+     <img src={selectAvatar(userInfo?.avatar)} className="avatarImage" alt="Avatar" />
      <h1>{userInfo?.nickname} </h1>
+     </Flex>
      {loading ? (
        <Spin size="large" fullscreen />
      ) : cars && cars.length ? (

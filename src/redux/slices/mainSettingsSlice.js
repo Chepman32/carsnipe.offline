@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const getBooleanFromLocalStorage = (key, defaultValue) => {
   const stored = localStorage.getItem(key);
@@ -12,33 +12,37 @@ const getBooleanFromLocalStorage = (key, defaultValue) => {
 };
 
 const initialState = {
-  darkMode: getBooleanFromLocalStorage('darkMode', false),
+  darkMode: getBooleanFromLocalStorage("darkMode", false),
   musicVolume: (() => {
-    const stored = localStorage.getItem('musicVolume');
+    const stored = localStorage.getItem("musicVolume");
     const parsed = parseInt(stored, 10);
     return isNaN(parsed) ? 50 : parsed;
   })(),
-  soundEffectsOn: getBooleanFromLocalStorage('soundEffectsOn', true), // Ensure this is correctly named
+  soundEffectsOn: getBooleanFromLocalStorage("soundEffectsOn", true), // Ensure this is correctly named
 };
 
 const mainSettingsSlice = createSlice({
-  name: 'mainSettings',
+  name: "mainSettings",
   initialState,
   reducers: {
     setDarkMode(state, action) {
       state.darkMode = action.payload;
-      localStorage.setItem('darkMode', JSON.stringify(state.darkMode));
+      localStorage.setItem("darkMode", JSON.stringify(state.darkMode));
     },
     setMusicVolume(state, action) {
       state.musicVolume = action.payload;
-      localStorage.setItem('musicVolume', state.musicVolume.toString());
+      localStorage.setItem("musicVolume", state.musicVolume.toString());
     },
     setSoundEffectsOn(state, action) {
       state.soundEffectsOn = action.payload;
-      localStorage.setItem('soundEffectsOn', JSON.stringify(state.soundEffectsOn));
+      localStorage.setItem(
+        "soundEffectsOn",
+        JSON.stringify(state.soundEffectsOn)
+      );
     },
   },
 });
 
-export const { setDarkMode, setMusicVolume, setSoundEffectsOn } = mainSettingsSlice.actions;
+export const { setDarkMode, setMusicVolume, setSoundEffectsOn } =
+  mainSettingsSlice.actions;
 export default mainSettingsSlice.reducer;

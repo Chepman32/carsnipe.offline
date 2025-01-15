@@ -5,7 +5,7 @@ import { generateClient } from "aws-amplify/api";
 import { getCurrentUser } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { Authenticator } from "@aws-amplify/ui-react";
-import { HashRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { HashRouter, BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
 import { Spin } from 'antd';
 import { Provider } from 'react-redux';
 import store from './redux/store';
@@ -32,6 +32,7 @@ import MusicUploadPage from "./pages/MusicUploadPage/MusicUploadPage";
 import MusicLibraryPage from "./pages/MusicLibraryPage/MusicLibraryPage";
 import GameSettings from "./pages/GameSettings/GameSettings";
 import { DarkModeWrapper } from "./components/DarkModeWrapper/DarkModeWrapper";
+import UserPage from "./pages/UserPage/UserPage";
 
 const client = generateClient();
 Amplify.configure(awsExports);
@@ -175,7 +176,7 @@ export default function App() {
   }
 
   return (
-    <HashRouter>
+    <BrowserRouter>
       <BackspaceHandler />
       <div className={playerInfo == null || playerInfo === undefined ? "auth-container" : ""}>
         <div className={playerInfo == null || playerInfo === undefined ? "auth-left" : ""} />
@@ -291,7 +292,11 @@ export default function App() {
                           <Route
                             path="/musicLibraryPage"
                             element={<MusicLibraryPage />}
-                          />
+                            />
+                          <Route
+                            path="/userPage/:id"
+                            element={<UserPage />}
+                            />
                         </Routes>
                         </DarkModeWrapper>
                       </main>
@@ -311,6 +316,6 @@ export default function App() {
           }
         </div>
       </div>
-    </HashRouter>
+    </BrowserRouter>
   );
 }

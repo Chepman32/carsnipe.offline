@@ -43,8 +43,6 @@ const persistedQuickSettingsReducer = persistReducer(
   quickSettingsReducer
 );
 
-// NEW persist config for musicPlayer
-// Notice we are NOT whitelisting "isPlaying" so it won't be restored from storage
 const musicPlayerPersistConfig = {
   key: 'musicPlayer',
   storage,
