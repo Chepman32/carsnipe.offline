@@ -3,12 +3,13 @@
 import { REHYDRATE } from "redux-persist";
 import { createSlice } from "@reduxjs/toolkit";
 import { stations } from "../stations";
+import { mockData } from '../mockData';
 
 const initialState = {
   currentStation: stations[0],
   currentTrack: null,
   isPlaying: false,
-  tracks: [],
+  tracks: mockData.players, // Use mock data when offline
   loading: false,
   error: null,
 };

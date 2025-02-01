@@ -25,6 +25,7 @@ import {
   setIsTopCar,
   TOP_CAR
 } from "../../redux/slices/focusSlice";
+import { cars as mockCars } from '../../redux/mockCarsData';
 
 const client = generateClient();
 
@@ -39,8 +40,8 @@ function getItemsPerRow() {
 }
 
 const MyCars = ({ playerInfo }) => {
-  const [cars, setCars] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [cars, setCars] = useState(mockCars);
+  const [loading, setLoading] = useState(false);
   const [newAuctionvisible, setNewAuctionVisible] = useState(false);
   const [auctionDuration, setAuctionDuration] = useState(1);
   const [minBid, setMinBid] = useState(0);
@@ -65,9 +66,11 @@ const MyCars = ({ playerInfo }) => {
   const groupedCars = React.useMemo(() => {
     const grouped = {};
     cars.forEach((item) => {
-      const mk = item.car.make || "UNKNOWN";
-      if (!grouped[mk]) grouped[mk] = [];
-      grouped[mk].push(item);
+      if (item && item.make) { 
+        const mk = item.make;
+        if (!grouped[mk]) grouped[mk] = [];
+        grouped[mk].push(item);
+      }
     });
     return grouped;
   }, [cars]);
@@ -89,7 +92,7 @@ const MyCars = ({ playerInfo }) => {
       return;
     }
     // Compare with first item in the flattened array
-    if (flatCars[0].car.id === focusedCar.id) {
+    if (flatCars[0].id === focusedCar.id) {
       dispatch(setIsTopCar(true));
     } else {
       dispatch(setIsTopCar(false));
@@ -98,7 +101,7 @@ const MyCars = ({ playerInfo }) => {
 
   useEffect(() => {
     if (focusedZone === FOCUS_ZONES.PAGE && !focusedCar && cars.length > 0) {
-      setFocusedCar(flatCars[0].car);
+      setFocusedCar(flatCars[0]);
       setSelectedCarIndex(0);
     } else if (focusedZone === FOCUS_ZONES.HEADER && focusedCar) {
       setFocusedCar(null);
@@ -116,21 +119,6 @@ const MyCars = ({ playerInfo }) => {
       }
     }
   }, [focusedCar]);
-
-  useEffect(() => {
-    async function fetchUserCars() {
-      try {
-        setLoading(true);
-        const userCars = await fetchUserCarsRequest(playerInfo.id);
-        setCars(userCars);
-      } catch (error) {
-        console.error('Error fetching cars:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchUserCars();
-  }, [playerInfo.id, loadingNewAuction]);
 
   useEffect(() => {
     dispatch(setFocusedZone(FOCUS_ZONES.PAGE));
@@ -191,7 +179,7 @@ const MyCars = ({ playerInfo }) => {
         if (positionInRow < itemsPerRow - 1 && positionInMake < currentMakeLength - 1) {
           const newIndex = selectedCarIndex + 1;
           setSelectedCarIndex(newIndex);
-          setFocusedCar(flatCars[newIndex].car);
+          setFocusedCar(flatCars[newIndex]);
           if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
         }
         break;
@@ -201,7 +189,7 @@ const MyCars = ({ playerInfo }) => {
         if (positionInRow > 0) {
           const newIndex = selectedCarIndex - 1;
           setSelectedCarIndex(newIndex);
-          setFocusedCar(flatCars[newIndex].car);
+          setFocusedCar(flatCars[newIndex]);
           if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
         }
         break;
@@ -216,7 +204,7 @@ const MyCars = ({ playerInfo }) => {
             currentMakeStartIndex + currentMakeLength - 1
           );
           setSelectedCarIndex(nextIndex);
-          setFocusedCar(flatCars[nextIndex].car);
+          setFocusedCar(flatCars[nextIndex]);
           if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
         } else {
           // Move to the next make if possible
@@ -224,7 +212,7 @@ const MyCars = ({ playerInfo }) => {
             const nextMake = sortedMakes[currentMakeIndexInSorted + 1];
             const nextMakeStartIndex = flatCars.indexOf(groupedCars[nextMake][0]);
             setSelectedCarIndex(nextMakeStartIndex);
-            setFocusedCar(flatCars[nextMakeStartIndex].car);
+            setFocusedCar(flatCars[nextMakeStartIndex]);
             if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
           }
         }
@@ -260,7 +248,7 @@ const MyCars = ({ playerInfo }) => {
             currentMakeStartIndex + currentMakeLength - 1
           );
           setSelectedCarIndex(prevIndex);
-          setFocusedCar(flatCars[prevIndex].car);
+          setFocusedCar(flatCars[prevIndex]);
           if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
         } else {
           // Move up to previous make
@@ -275,7 +263,7 @@ const MyCars = ({ playerInfo }) => {
               prevMakeStartIndex + prevMakeCars.length - 1
             );
             setSelectedCarIndex(targetIndex);
-            setFocusedCar(flatCars[targetIndex].car);
+            setFocusedCar(flatCars[targetIndex]);
             if (soundEffectsOn || soundEffectsOnQuickSettings) playSwitchSound();
           }
         }
@@ -290,7 +278,7 @@ const MyCars = ({ playerInfo }) => {
       }
       case "Enter": {
         // Show details
-        setSelectedCar(flatCars[selectedCarIndex]?.car);
+        setSelectedCar(flatCars[selectedCarIndex]);
         if (soundEffectsOn || soundEffectsOnQuickSettings) playOpeningSound();
         showCarDetailsModal();
         break;
@@ -407,14 +395,14 @@ const MyCars = ({ playerInfo }) => {
                 {group.map((carItem) => {
                   // Find absolute index in flattened array
                   const realIndex = flatCars.findIndex(
-                    (c) => c.car.id === carItem.car.id
+                    (c) => c.id === carItem.id
                   );
                   return (
                     <CarCard
-                      key={carItem.car.id}
+                      key={carItem.id}
                       focusedCar={focusedCar}
                       selectedCar={
-                        realIndex === selectedCarIndex ? carItem.car : null
+                        realIndex === selectedCarIndex ? carItem : null
                       }
                       setSelectedCar={(car) => {
                         setSelectedCar(car);
@@ -422,7 +410,7 @@ const MyCars = ({ playerInfo }) => {
                         showCarDetailsModalExternal();
                       }}
                       showCarDetailsModal={showCarDetailsModalExternal}
-                      car={carItem.car}
+                      car={carItem}
                       getImageSource={getImageSource}
                     />
                   );

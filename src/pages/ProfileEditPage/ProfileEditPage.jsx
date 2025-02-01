@@ -23,6 +23,7 @@ import "./styles.css";
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FOCUS_ZONES, HEADER_MAIN_MENU, setCurrentFocusedElement, setFocusedZone } from '../../redux/slices/focusSlice';
+import { setUserData, updateAvatar, updateUserPreferences } from '../../redux/slices/userSlice';
 
 const client = generateClient();
 
@@ -51,12 +52,12 @@ const avatarMap = {
 const avatars = Object.keys(avatarMap);
 const avatarsPerRow = 4; // Number of avatars in one row
 
-const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPlayerInfo }) => {
+const ProfileEditPage = ({ signOut }) => {
+  const dispatch = useDispatch();
+  const { nickname, avatar, bio } = useSelector((state) => state.user);
   const [form] = Form.useForm();
-  const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [selectedAvatar, setSelectedAvatar] = useState(avatar);
   const [loading, setLoading] = useState(false);
-  const [nickname, setNickname] = useState(playerInfo.nickname || "");
-  const [bio, setBio] = useState(playerInfo.bio || "");
   const [focusedAvatarIndex, setFocusedAvatarIndex] = useState(0);
   const [focusedElement, setFocusedElement] = useState('avatars'); // avatars, nickname, bio, achievements, signout
   const [isEditing, setIsEditing] = useState(false);
@@ -64,7 +65,7 @@ const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPla
   const darkMode = useSelector((state) => state.quickSettings.darkMode);
   const { focusedZone } = useSelector((state) => state.focus);
 
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (focusedZone === FOCUS_ZONES.PAGE) {
@@ -75,10 +76,11 @@ const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPla
   }, [focusedZone]);
 
   useEffect(() => {
-    if (playerInfo.nickname) setNickname(playerInfo.nickname);
-    if (playerInfo.avatar) setSelectedAvatar(playerInfo.avatar);
-    if (playerInfo.bio) setBio(playerInfo.bio);
-  }, [playerInfo]);
+    form.setFieldsValue({
+      nickname,
+      bio
+    });
+  }, [form, nickname, bio]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -214,40 +216,35 @@ const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPla
     setSelectedAvatar(avatarName);
   };
 
-  const handleSubmit = async (values) => {
+  const onFinish = async (values) => {
     try {
       setLoading(true);
-      const updatedUser = {
-        id: playerInfo.id,
-        nickname,
-        bio,
-        avatar: selectedAvatar,
-      };
-      await client.graphql({
-        query: mutations.updateUser,
-        variables: { input: updatedUser },
-      });
-      currentAuthenticatedUser();
-      setLoading(false);
+      // Update user data in Redux
+      dispatch(setUserData({
+        nickname: values.nickname,
+        bio: values.bio
+      }));
+
+      // Update avatar if changed
+      if (selectedAvatar !== avatar) {
+        dispatch(updateAvatar(selectedAvatar));
+      }
+
       notification.success({
         message: 'Profile Updated',
-        description: `Nickname: ${nickname}`,
-        placement: 'topRight',
+        description: 'Your profile has been successfully updated!'
       });
-    } catch (error) {
       setLoading(false);
+    } catch (error) {
       notification.error({
         message: 'Update Failed',
-        description: 'Failed to update profile',
-        placement: 'topRight',
+        description: error.message
       });
+      setLoading(false);
     }
   };
 
-  const navigate = useNavigate();
-
   const handleSignOut = () => {
-    setPlayerInfo(null);
     signOut();
     navigate('/');
     notification.info({
@@ -262,9 +259,9 @@ const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPla
       <div className={`profile-container ${darkMode ? 'dark-mode' : 'light-mode'}`}>
         <div className="profile-box">
           <Title level={3} className="profile-title">
-            Edit Profile: {playerInfo.nickname}
+            Edit Profile: {nickname}
           </Title>
-          <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form form={form} layout="vertical" onFinish={onFinish}>
             <div className="avatar-container">
               {avatars.map((avatarName, index) => (
                 <img
@@ -282,7 +279,7 @@ const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPla
               <Input 
                 placeholder="Enter your nickname" 
                 value={nickname} 
-                onChange={(event) => setNickname(event.target.value)}
+                onChange={(event) => form.setFieldsValue({ nickname: event.target.value })}
                 className={`input-field ${focusedElement === 'nickname' && !isEditing ? 'focused' : ''}`}
                 readOnly={!isEditing}
               />
@@ -292,7 +289,7 @@ const ProfileEditPage = ({ playerInfo, currentAuthenticatedUser, signOut, setPla
                 placeholder="Tell us a couple of words about yourself" 
                 rows={4}
                 value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                onChange={(e) => form.setFieldsValue({ bio: e.target.value })}
                 className={`textarea-field ${focusedElement === 'bio' && !isEditing ? 'focused' : ''}`}
                 readOnly={!isEditing}
               />

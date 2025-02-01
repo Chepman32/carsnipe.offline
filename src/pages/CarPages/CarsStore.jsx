@@ -22,6 +22,8 @@ import {
   setIsTopCar,
   TOP_CAR
 } from "../../redux/slices/focusSlice";
+import { updateMoney, addBiddedAuction, updateStatistics } from "../../redux/slices/userSlice";
+import { cars as mockCars } from '../../redux/mockCarsData';
 import "./carsPage.css";
 
 const { Option } = Select;
@@ -47,8 +49,10 @@ function getItemsPerRow() {
   return Math.max(1, itemsPerRow);
 }
 
-const CarsStore = ({ playerInfo, setMoney, money }) => {
-  const [cars, setCars] = useState([]);
+const CarsStore = () => {
+  const dispatch = useDispatch();
+  const { money, biddedAuctions } = useSelector((state) => state.user);
+  const [cars, setCars] = useState(mockCars);
   const [visible, setVisible] = useState(false);
   const [loadingBuy, setLoadingBuy] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
@@ -57,13 +61,11 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
   const [carDetailsVisible, setCarDetailsVisible] = useState(false);
   const [selectedCarIndex, setSelectedCarIndex] = useState(0);
   const [creditWarningModalvisible, setCreditWarningModalvisible] = useState(false);
-  const [carsLoading, setCarsLoading] = useState(true);
+  const [carsLoading, setCarsLoading] = useState(false);
 
   const soundEffectsOnQuickSettings = useSelector((state) => state.quickSettings.soundEffectsOn);
   const soundEffectsOn = useSelector((state) => state.mainSettings.soundEffectsOn);
   const { focusedZone, currentFocusedElement } = useSelector((state) => state.focus);
-
-  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!focusedCar || cars.length === 0) {
@@ -333,24 +335,24 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
   ]);
 
   const buyCar = async (car) => {
-    if (playerInfo && playerInfo.id && money >= car.price) {
+    if (money >= car.price) {
       if (soundEffectsOn) {
         playSwitchSound();
       }
-      setMoney((prevMoney) => prevMoney - car.price);
+      dispatch(updateMoney(money - car.price));
       try {
         setLoadingBuy(true);
         await client.graphql({
           query: mutations.updateUser,
           variables: {
             input: {
-              id: playerInfo.id,
+              id: "playerInfo.id",
               money: money - car.price,
-              totalSpent: (playerInfo.totalSpent || 0) + car.price
+              totalSpent: (money - car.price)
             }
           }
         });
-        createNewUserCar(playerInfo.id, car.id);
+        createNewUserCar("playerInfo.id", car.id);
         message.success("Car successfully bought!");
       } catch (err) {
         console.log(err);
@@ -359,12 +361,12 @@ const CarsStore = ({ playerInfo, setMoney, money }) => {
         setLoadingBuy(false);
         setSelectedCar(null);
       }
-    } else if (playerInfo && money < car.price) {
+    } else {
       setCreditWarningModalvisible(true);
       handleCarDetailsCancel();
       return;
     }
-    await checkAndUpdateAchievements(playerInfo);
+    await checkAndUpdateAchievements("playerInfo");
   };
 
   const handleCancel = () => {

@@ -11,6 +11,7 @@ import quickSettingsReducer from './slices/quickSettingsSlice';
 import mainSettingsReducer from './slices/mainSettingsSlice';
 import { musicPlayerSaga } from './sagas/musicPlayerSaga';
 import focusReducer from './slices/focusSlice';
+import userReducer from './slices/userSlice';
 
 // Root Saga
 function* rootSaga() {
@@ -33,15 +34,11 @@ const quickSettingsPersistConfig = {
   whitelist: ['musicOn'],
 };
 
-const persistedMainSettingsReducer = persistReducer(
-  mainSettingsPersistConfig,
-  mainSettingsReducer
-);
-
-const persistedQuickSettingsReducer = persistReducer(
-  quickSettingsPersistConfig,
-  quickSettingsReducer
-);
+const userPersistConfig = {
+  key: 'user',
+  storage,
+  whitelist: ['nickname', 'money', 'avatar', 'achievements', 'userPreferences', 'statistics'],
+};
 
 const musicPlayerPersistConfig = {
   key: 'musicPlayer',
@@ -55,17 +52,32 @@ const persistedMusicPlayerReducer = persistReducer(
   musicPlayerReducer
 );
 
+const persistedQuickSettingsReducer = persistReducer(
+  quickSettingsPersistConfig,
+  quickSettingsReducer
+);
+
+const persistedMainSettingsReducer = persistReducer(
+  mainSettingsPersistConfig,
+  mainSettingsReducer
+);
+
+const persistedUserReducer = persistReducer(
+  userPersistConfig,
+  userReducer
+);
+
 // Create Saga Middleware
 const sagaMiddleware = createSagaMiddleware();
 
 // Configure the Redux Store
 const store = configureStore({
   reducer: {
-    // Use the persisted musicPlayer reducer
     musicPlayer: persistedMusicPlayerReducer,
     quickSettings: persistedQuickSettingsReducer,
     mainSettings: persistedMainSettingsReducer,
-    focus: focusReducer
+    focus: focusReducer,
+    user: persistedUserReducer
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

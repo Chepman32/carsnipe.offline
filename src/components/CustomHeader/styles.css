@@ -205,7 +205,28 @@
 }
 
 .customHeader__avatar {
-  background: aqua;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  padding: 0.5rem;
+  border-radius: 0.7rem;
+  transition: all 0.3s ease;
+}
+
+.customHeader__avatar:hover {
+  background-color: rgba(42, 72, 234, 0.3);
+}
+
+.headerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #ffdd00;
+}
+
+.customHeader__avatar.focused {
+  border: 2px solid red;
 }
 
 .customHeader__avatar img, .drawer__avatar img {

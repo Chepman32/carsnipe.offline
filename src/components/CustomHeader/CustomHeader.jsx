@@ -13,6 +13,24 @@ import {
   MenuItems
 } from './MenuItems';
 import plus_symbol from '../../assets/icons/plus_ymbol.png';
+import avatar1 from "../../assets/images/avatars/avatar1.jpg";
+import avatar2 from "../../assets/images/avatars/avatar2.jpg";
+import avatar3 from "../../assets/images/avatars/avatar3.jpeg";
+import avatar4 from "../../assets/images/avatars/avatar4.jpeg";
+import avatar5 from "../../assets/images/avatars/avatar5.jpeg";
+import avatar6 from "../../assets/images/avatars/avatar6.jpeg";
+import avatar7 from "../../assets/images/avatars/avatar7.png";
+import avatar8 from "../../assets/images/avatars/avatar8.jpeg";
+import avatar9 from "../../assets/images/avatars/avatar9.png";
+import avatar10 from "../../assets/images/avatars/avatar10.png";
+import avatar11 from "../../assets/images/avatars/avatar11.jpeg";
+import avatar12 from "../../assets/images/avatars/avatar12.jpeg";
+import avatar13 from "../../assets/images/avatars/avatar13.png";
+import avatar14 from "../../assets/images/avatars/avatar14.png";
+import avatar15 from "../../assets/images/avatars/avatar15.png";
+import avatar16 from "../../assets/images/avatars/avatar16.png";
+import fastForward from "../../assets/icons/fast-forward.png"
+import rewind from "../../assets/icons/rewind.png"
 import {
   FOCUS_ZONES,
   HEADER_MAIN_MENU,
@@ -25,17 +43,36 @@ import {
   setCurrentFocusedElement,
   setIsQuickMenuOpen
 } from '../../redux/slices/focusSlice';
-import { setMusicVolume } from '../../redux/slices/mainSettingsSlice';
+import {
+  setMusicVolume
+} from '../../redux/slices/mainSettingsSlice';
 import {
   playNextStation,
   playPreviousStation
 } from '../../redux/slices/musicPlayerSlice';
-import fastForward from "../../assets/icons/fast-forward.png"
-import rewind from "../../assets/icons/rewind.png"
 
 const { Text, Title } = Typography;
 
-const CustomHeader = ({ nickname, avatar, money }) => {
+const avatarMap = {
+  avatar1,
+  avatar2,
+  avatar3,
+  avatar4,
+  avatar5,
+  avatar6,
+  avatar7,
+  avatar8,
+  avatar9,
+  avatar10,
+  avatar11,
+  avatar12,
+  avatar13,
+  avatar14,
+  avatar15,
+  avatar16,
+};
+
+const CustomHeader = () => {
   const [isHovered, setIsHovered] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -45,6 +82,7 @@ const CustomHeader = ({ nickname, avatar, money }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const { nickname, avatar, money } = useSelector((state) => state.user);
   const { musicOn, soundEffectsOn, darkMode } = useSelector((state) => state.quickSettings);
   const { musicVolume } = useSelector((state) => state.mainSettings);
   const { focusedZone, currentFocusedElement, isQuickMenuOpen } = useSelector((state) => state.focus);
@@ -245,7 +283,7 @@ const CustomHeader = ({ nickname, avatar, money }) => {
               >
                 {nickname}
               </Text>
-              <img src={avatar} alt="avatar" />
+              <img src={avatarMap[avatar]} alt="avatar" className="headerAvatar" />
             </Link>
             <div
               className={
