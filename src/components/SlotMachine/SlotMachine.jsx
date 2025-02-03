@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import SlotCounter from 'react-slot-counter';
 import { carImages } from '../../constants';
-import './SlotMachine.css';
+import './slotMachine.css';
 
 const SlotMachine = () => {
   const [value, setValue] = useState(0);

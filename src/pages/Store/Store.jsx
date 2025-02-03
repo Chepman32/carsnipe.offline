@@ -6,6 +6,7 @@ import coin_symbol from "../../assets/icons/coin_symbol.png";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { handleKeyDown, setFocusedZone, setStoreItemsCount, FOCUS_ZONES } from "../../redux/slices/focusSlice";
+import SlotMachine from "../../components/SlotMachine/SlotMachine"
 
 const StoreItemCard = ({ item, isFocused }) => {
   return (
@@ -117,6 +118,7 @@ const Store = ({ email, username }) => {
 
   return (
     <div>
+      <SlotMachine username={username} />
       <section className="store-container">
         {items.map((item, index) => (
           <StoreItemCard
