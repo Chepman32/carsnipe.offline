@@ -59,21 +59,10 @@ const ProfileEditPage = ({ signOut }) => {
   const [selectedAvatar, setSelectedAvatar] = useState(avatar);
   const [loading, setLoading] = useState(false);
   const [focusedAvatarIndex, setFocusedAvatarIndex] = useState(0);
-  const [focusedElement, setFocusedElement] = useState('avatars'); // avatars, nickname, bio, achievements, signout
-  const [isEditing, setIsEditing] = useState(false);
-
+  const [focusedElement, setFocusedElement] = useState('avatars');
+  const navigate = useNavigate();
   const darkMode = useSelector((state) => state.quickSettings.darkMode);
   const { focusedZone } = useSelector((state) => state.focus);
-
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (focusedZone === FOCUS_ZONES.PAGE) {
-      setFocusedElement('avatars');
-      setFocusedAvatarIndex(0);
-      setIsEditing(false);
-    }
-  }, [focusedZone]);
 
   useEffect(() => {
     form.setFieldsValue({
@@ -81,136 +70,6 @@ const ProfileEditPage = ({ signOut }) => {
       bio
     });
   }, [form, nickname, bio]);
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (isEditing && document.activeElement.tagName === "TEXTAREA" || document.activeElement.tagName === "INPUT") {
-        if (event.key === "Escape") {
-          document.activeElement.blur();
-          setIsEditing(false);
-          return;
-        }
-        if (event.key === "Tab") {
-          return;
-        }
-        return;
-      }
-
-      let newIndex = focusedAvatarIndex;
-
-      switch (event.key) {
-        case "ArrowRight":
-          if (focusedElement === 'avatars') {
-            // Check if we're at the end of a row
-            const currentRow = Math.floor(focusedAvatarIndex / avatarsPerRow);
-            const positionInRow = focusedAvatarIndex % avatarsPerRow;
-            
-            // Only move right if we're not at the end of the row
-            if (positionInRow < avatarsPerRow - 1 && focusedAvatarIndex + 1 < avatars.length) {
-              newIndex = focusedAvatarIndex + 1;
-            } else {
-              // Stay at current position if at end of row
-              newIndex = focusedAvatarIndex;
-            }
-          } else if (focusedElement === 'signout') {
-            setFocusedElement('achievements');
-          }
-          break;
-        case "ArrowLeft":
-          if (focusedElement === 'avatars') {
-            // Check position in row
-            const positionInRow = focusedAvatarIndex % avatarsPerRow;
-            
-            // Only move left if we're not at the start of the row
-            if (positionInRow > 0) {
-              newIndex = focusedAvatarIndex - 1;
-            } else {
-              // Stay at current position if at start of row
-              newIndex = focusedAvatarIndex;
-            }
-          } else if (focusedElement === 'achievements') {
-            setFocusedElement('signout');
-          }
-          break;
-        case "ArrowDown":
-          if (focusedElement === 'avatars') {
-            if (focusedAvatarIndex + avatarsPerRow < avatars.length) {
-              newIndex = focusedAvatarIndex + avatarsPerRow;
-            } else {
-              setFocusedElement('nickname');
-              setFocusedAvatarIndex(-1);
-              return;
-            }
-          } else if (focusedElement === 'nickname') {
-            setFocusedElement('bio');
-            return;
-          } else if (focusedElement === 'bio') {
-            setFocusedElement('save');
-            return;
-          } else if (focusedElement === 'save') {
-            setFocusedElement('signout');
-            return;
-          }
-          break;
-        case "ArrowUp":
-          if (focusedAvatarIndex < avatarsPerRow && focusedElement === 'avatars') {
-            dispatch(setFocusedZone(FOCUS_ZONES.HEADER))
-            dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU))
-            setFocusedAvatarIndex(-1)
-            return;
-          } else if (focusedElement === 'nickname') {
-            setFocusedElement('avatars');
-            setFocusedAvatarIndex(avatars.length - 1);
-            return;
-          } else if (focusedElement === 'bio') {
-            setFocusedElement('nickname');
-            return;
-          } else if (focusedElement === 'save') {
-            setFocusedElement('bio');
-            return;
-          } else if (focusedElement === 'signout') {
-            setFocusedElement('save');
-            return;
-          } else if (focusedElement === 'achievements') {
-            setFocusedElement('bio');
-            return;
-          }
-          if (focusedElement === 'avatars') {
-            newIndex = focusedAvatarIndex - avatarsPerRow >= 0 ? focusedAvatarIndex - avatarsPerRow : focusedAvatarIndex;
-          }
-          break;
-        case "Enter":
-        case " ":
-          if (focusedElement === 'avatars') {
-            setSelectedAvatar(avatars[focusedAvatarIndex]);
-          } else if (focusedElement === 'achievements') {
-            window.location.href = '/achievements#/achievements';
-          } else if (focusedElement === 'nickname' || focusedElement === 'bio') {
-            setIsEditing(true);
-            const element = focusedElement === 'nickname' ? 
-              document.querySelector('.input-field') : 
-              document.querySelector('.textarea-field');
-            if (element) {
-              element.focus();
-            }
-          } else if (focusedElement === 'signout') {
-            signOut();
-          }
-          break;
-        default:
-          break;
-      }
-
-      if (focusedElement === 'avatars') {
-        setFocusedAvatarIndex(newIndex);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [focusedAvatarIndex, dispatch, focusedZone, focusedElement, isEditing]);
 
   const handleAvatarSelect = (avatarName) => {
     setSelectedAvatar(avatarName);
@@ -275,55 +134,42 @@ const ProfileEditPage = ({ signOut }) => {
                 />
               ))}
             </div>
-            <Form.Item>
+            <Form.Item name="nickname" label="Nickname">
               <Input 
-                placeholder="Enter your nickname" 
-                value={nickname} 
-                onChange={(event) => form.setFieldsValue({ nickname: event.target.value })}
-                className={`input-field ${focusedElement === 'nickname' && !isEditing ? 'focused' : ''}`}
-                readOnly={!isEditing}
+                placeholder="Enter your nickname"
+                className={`input-field ${focusedElement === 'nickname' ? 'focused' : ''}`}
               />
             </Form.Item>
-            <Form.Item>
+            <Form.Item name="bio" label="Bio">
               <TextArea 
                 placeholder="Tell us a couple of words about yourself" 
                 rows={4}
-                value={bio}
-                onChange={(e) => form.setFieldsValue({ bio: e.target.value })}
-                className={`textarea-field ${focusedElement === 'bio' && !isEditing ? 'focused' : ''}`}
-                readOnly={!isEditing}
+                className={`textarea-field ${focusedElement === 'bio' ? 'focused' : ''}`}
               />
             </Form.Item>
             <Form.Item>
               <Button 
                 type="primary" 
                 htmlType="submit"
-                block
-                className={`save-button ${focusedElement === 'save' ? 'focused' : ''}`}
                 loading={loading}
+                block
+                className={`submit-button ${focusedElement === 'submit' ? 'focused' : ''}`}
               >
                 Save Changes
               </Button>
             </Form.Item>
+            <Button
+              icon={<LogoutOutlined />}
+              onClick={handleSignOut}
+              className={`signout-button ${focusedElement === 'signout' ? 'focused' : ''}`}
+              danger
+              block
+            >
+              Sign Out
+            </Button>
           </Form>
-          <Button 
-            danger
-            icon={<LogoutOutlined />}
-            onClick={handleSignOut}
-            block
-            className={`signout-button ${focusedElement === 'signout' ? 'focused' : ''}`}
-          >
-            Sign Out
-          </Button>
         </div>
       </div>
-      <Link 
-        to="/achievements#/achievements"
-        type="primary" 
-        className={`achievementsButton ${focusedElement === 'achievements' ? 'focused' : ''}`}
-      >
-        My achievements
-      </Link>
     </>
   );
 };

@@ -31,7 +31,19 @@ function BackspaceHandler() {
   const navigate = useNavigate();
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Backspace') {
+      // Get the currently focused element
+      const activeElement = document.activeElement;
+      
+      // Check if the focused element is an input, textarea, or any editable element
+      const isEditableElement = (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true' ||
+        activeElement.tagName === 'SELECT'
+      );
+
+      // Only navigate back if backspace is pressed and no editable element is focused
+      if (event.key === 'Backspace' && !isEditableElement) {
         navigate(-1);
       }
     };
@@ -62,45 +74,56 @@ function AppContent() {
         email: signInDetails?.loginId,
       };
       
-      // Initialize Redux user state
-      dispatch(setUserData({
-        nickname: username,
-        money: 100000, // Default starting money
-        avatar: 'avatar1', // Default avatar
-        biddedAuctions: [],
-        achievements: [],
-        userPreferences: {
-          notifications: true,
-          language: 'en'
-        },
-        statistics: {
-          wonAuctions: 0,
-          totalBids: 0,
-          moneySpent: 0
-        }
-      }));
+      // Get current state from Redux
+      const currentState = store.getState().user;
+      
+      // Only initialize if user data doesn't exist
+      if (!currentState.nickname) {
+        dispatch(setUserData({
+          nickname: username,
+          money: 100000, // Default starting money
+          avatar: 'avatar1', // Default avatar
+          bio: '', // Default bio
+          biddedAuctions: [],
+          achievements: [],
+          userPreferences: {
+            notifications: true,
+            language: 'en'
+          },
+          statistics: {
+            wonAuctions: 0,
+            totalBids: 0,
+            moneySpent: 0
+          }
+        }));
+      }
 
       setUser(userData);
       setIsLoading(false);
     } catch (error) {
       console.error('Error checking user:', error);
-      // For development, initialize with mock data if auth fails
-      dispatch(setUserData({
-        nickname: "Demo User",
-        money: 100000,
-        avatar: 'avatar1',
-        biddedAuctions: [],
-        achievements: [],
-        userPreferences: {
-          notifications: true,
-          language: 'en'
-        },
-        statistics: {
-          wonAuctions: 0,
-          totalBids: 0,
-          moneySpent: 0
-        }
-      }));
+      // For development, initialize with mock data if auth fails and no existing data
+      const currentState = store.getState().user;
+      
+      if (!currentState.nickname) {
+        dispatch(setUserData({
+          nickname: "Demo User",
+          money: 100000,
+          avatar: 'avatar1',
+          bio: '',
+          biddedAuctions: [],
+          achievements: [],
+          userPreferences: {
+            notifications: true,
+            language: 'en'
+          },
+          statistics: {
+            wonAuctions: 0,
+            totalBids: 0,
+            moneySpent: 0
+          }
+        }));
+      }
       setIsLoading(false);
     }
   }

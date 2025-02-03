@@ -1,26 +1,28 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-  nickname: '',
+  nickname: "",
   money: 0,
-  avatar: '',
+  avatar: "",
+  bio: "",
   auctionsNumber: 0,
   biddedAuctions: [],
   achievements: [],
   isAuthenticated: false,
   userPreferences: {
     notifications: true,
-    language: 'en',
+    language: "en",
   },
   statistics: {
     wonAuctions: 0,
     totalBids: 0,
     moneySpent: 0,
-  }
+  },
+  cars: [], // Add cars array to store purchased cars
 };
 
 const userSlice = createSlice({
-  name: 'user',
+  name: "user",
   initialState,
   reducers: {
     setUserData: (state, action) => {
@@ -32,13 +34,16 @@ const userSlice = createSlice({
     updateAvatar: (state, action) => {
       state.avatar = action.payload;
     },
+    updateBio: (state, action) => {
+      state.bio = action.payload;
+    },
     addBiddedAuction: (state, action) => {
       state.biddedAuctions.push(action.payload);
       state.statistics.totalBids += 1;
     },
     removeBiddedAuction: (state, action) => {
       state.biddedAuctions = state.biddedAuctions.filter(
-        auction => auction.id !== action.payload
+        (auction) => auction.id !== action.payload
       );
     },
     addAchievement: (state, action) => {
@@ -53,6 +58,12 @@ const userSlice = createSlice({
     updateUserPreferences: (state, action) => {
       state.userPreferences = { ...state.userPreferences, ...action.payload };
     },
+    addCar: (state, action) => {
+      state.cars.push(action.payload);
+    },
+    removeCar: (state, action) => {
+      state.cars = state.cars.filter((car) => car.id !== action.payload);
+    },
     resetUser: () => initialState,
   },
 });
@@ -61,6 +72,7 @@ export const {
   setUserData,
   updateMoney,
   updateAvatar,
+  updateBio,
   addBiddedAuction,
   removeBiddedAuction,
   addAchievement,
@@ -68,6 +80,8 @@ export const {
   setAuthenticated,
   updateUserPreferences,
   resetUser,
+  addCar,
+  removeCar,
 } = userSlice.actions;
 
 export default userSlice.reducer;

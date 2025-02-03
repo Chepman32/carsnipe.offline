@@ -25,7 +25,6 @@ import {
   setIsTopCar,
   TOP_CAR
 } from "../../redux/slices/focusSlice";
-import { cars as mockCars } from '../../redux/mockCarsData';
 
 const client = generateClient();
 
@@ -40,7 +39,6 @@ function getItemsPerRow() {
 }
 
 const MyCars = ({ playerInfo }) => {
-  const [cars, setCars] = useState(mockCars);
   const [loading, setLoading] = useState(false);
   const [newAuctionvisible, setNewAuctionVisible] = useState(false);
   const [auctionDuration, setAuctionDuration] = useState(1);
@@ -57,6 +55,7 @@ const MyCars = ({ playerInfo }) => {
   const soundEffectsOnQuickSettings = useSelector((state) => state.quickSettings.soundEffectsOn);
   const soundEffectsOn = useSelector((state) => state.mainSettings.soundEffectsOn);
   const { focusedZone } = useSelector((state) => state.focus);
+  const cars = useSelector((state) => state.user.cars); // Get cars from Redux state
 
   const dispatch = useDispatch();
   const [form] = Form.useForm();

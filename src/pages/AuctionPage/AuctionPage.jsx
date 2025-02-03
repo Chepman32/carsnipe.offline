@@ -56,7 +56,7 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
           timeLeft
         };
       });
-      const filtered = auctions.filter(auction => auction.player !== playerInfo.nickname)
+      const filtered = auctions.filter(auction => auction.player !== playerInfo?.nickname)
 
       setAuctions(filtered);
       if (filtered.length > 0) {
@@ -71,7 +71,7 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
     } catch (error) {
       console.error("Error fetching auctions:", error);
     }
-  }, [playerInfo.nickname]);
+  }, [playerInfo?.nickname]);
 
   const increaseBid = async (auction) => {
     try {
@@ -100,7 +100,7 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
           return;
         }
   
-        const newMoney = auction.lastBidPlayer === playerInfo.nickname
+        const newMoney = auction.lastBidPlayer === playerInfo?.nickname
           ? money - (increasedBidValue - auction.currentBid)
           : money - increasedBidValue;
   
@@ -131,7 +131,7 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
         const updatedAuction = {
           id: auction.id,
           currentBid: increasedBidValue,
-          lastBidPlayer: playerInfo.nickname,
+          lastBidPlayer: playerInfo?.nickname,
           bidsCount: auction.bidsCount + 1,
           status: increasedBidValue < auction.buy ? "Active" : "Finished",
         };
@@ -145,7 +145,7 @@ export default function AuctionPage({ playerInfo, setMoney, money }) {
         const currentIndex = auctions.indexOf(auction);
         await listAuctions(currentIndex);
   
-        if (auction.player !== playerInfo.nickname) {
+        if (auction.player !== playerInfo?.nickname) {
           await client.graphql({
             query: mutations.updateUser,
             variables: {

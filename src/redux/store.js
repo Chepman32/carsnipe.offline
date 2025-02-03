@@ -37,7 +37,7 @@ const quickSettingsPersistConfig = {
 const userPersistConfig = {
   key: 'user',
   storage,
-  whitelist: ['nickname', 'money', 'avatar', 'achievements', 'userPreferences', 'statistics'],
+  whitelist: ['nickname', 'money', 'avatar', 'bio', 'achievements', 'userPreferences', 'statistics', 'auctionsNumber', 'biddedAuctions'],
 };
 
 const musicPlayerPersistConfig = {

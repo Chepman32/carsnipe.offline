@@ -9,6 +9,7 @@ import {
   toggleDarkMode,
   toggleSoundEffects
 } from '../../redux/slices/quickSettingsSlice';
+import { updateMoney } from '../../redux/slices/userSlice';
 import {
   MenuItems
 } from './MenuItems';
@@ -240,7 +241,15 @@ const CustomHeader = () => {
               }}
               tabIndex={0}
             >
-              <img src={plus_symbol} alt="plus_symbol" className="headerIcon" />
+              <img 
+                src={plus_symbol} 
+                alt="plus_symbol" 
+                className="headerIcon" 
+                onClick={() => {
+                  const currentMoney = money;
+                  dispatch(updateMoney(currentMoney + 100000));
+                }} 
+              />
               <Text
                 style={{
                   marginRight: 15,
