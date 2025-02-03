@@ -20,6 +20,7 @@ import ProfileEditPage from "./pages/ProfileEditPage/ProfileEditPage";
 import AchievementList from "./pages/AchievementList/AchievementList";
 import { MainPage } from "./pages/MainPage/MainPage";
 import './AuthStyles.css';
+import './styles/achievements.css';
 import MusicUploadPage from "./pages/MusicUploadPage/MusicUploadPage";
 import MusicLibraryPage from "./pages/MusicLibraryPage/MusicLibraryPage";
 import GameSettings from "./pages/GameSettings/GameSettings";

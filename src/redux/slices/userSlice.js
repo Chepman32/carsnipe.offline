@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { checkAndUpdateAchievements } from "../../functions";
 
 // Load cars from localStorage if available
 const loadCarsFromStorage = () => {
@@ -37,10 +38,24 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUserData: (state, action) => {
-      return { ...state, ...action.payload };
+      const newState = { ...state, ...action.payload };
+      // Check for new achievements if relevant properties changed
+      const relevantPropsChanged = [
+        'cars',
+        'biddedAuctions',
+        'money',
+        'achievements'
+      ].some(prop => action.payload[prop] !== undefined);
+      
+      if (relevantPropsChanged) {
+        checkAndUpdateAchievements(newState, userSlice.actions, () => ({ user: newState }));
+      }
+      return newState;
     },
     updateMoney: (state, action) => {
       state.money = action.payload;
+      // Check for new achievements
+      checkAndUpdateAchievements(state, userSlice.actions, () => ({ user: state }));
     },
     updateAvatar: (state, action) => {
       state.avatar = action.payload;
@@ -51,6 +66,8 @@ const userSlice = createSlice({
     addBiddedAuction: (state, action) => {
       state.biddedAuctions.push(action.payload);
       state.statistics.totalBids += 1;
+      // Check for new achievements
+      checkAndUpdateAchievements(state, userSlice.actions, () => ({ user: state }));
     },
     removeBiddedAuction: (state, action) => {
       state.biddedAuctions = state.biddedAuctions.filter(
@@ -73,11 +90,15 @@ const userSlice = createSlice({
       state.cars.push(action.payload);
       // Save to localStorage whenever cars are updated
       localStorage.setItem('userCars', JSON.stringify(state.cars));
+      // Check for new achievements
+      checkAndUpdateAchievements(state, userSlice.actions, () => ({ user: state }));
     },
     removeCar: (state, action) => {
       state.cars = state.cars.filter((car) => car.id !== action.payload);
       // Save to localStorage whenever cars are updated
       localStorage.setItem('userCars', JSON.stringify(state.cars));
+      // Check for new achievements
+      checkAndUpdateAchievements(state, userSlice.actions, () => ({ user: state }));
     },
     resetUser: (state) => {
       localStorage.removeItem('userCars'); // Clear cars from localStorage on reset

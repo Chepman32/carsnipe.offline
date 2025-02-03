@@ -362,7 +362,7 @@ export const fetchUserAchievementsList = async (userId) => {
   }
 };
 
-export const getCarPriceByIdFromUserCar = async (userId, carId) => {
+export async function getCarPriceByIdFromUserCar(userId, carId) {
   try {
     const userData = await client.graphql({
       query: `
@@ -474,62 +474,100 @@ export const getAchievementImageSource = (title) => {
   return require(`./assets/images/achievements/${imageName}`);
 };
 
-export async function checkAndUpdateAchievements(user) {
+export async function checkAndUpdateAchievements(user, dispatch, getState) {
   const info = await fetchUserData(user.id);
   try {
-    const userAchievements = await fetchUserAchievementsList(user.id);
-    const userCars = await fetchUserCarsRequest(user.id);
-    const userBidded = await fetchUserBiddedList(user.id);
+    const state = getState();
+    const userState = state.user;
+    const userAchievements = userState.achievements || [];
+    const userCars = userState.cars || [];
+    const userBidded = userState.biddedAuctions || [];
     const userSold = info.sold || [];
-    const userNickname = user.nickname;
+    const userNickname = userState.nickname;
 
     const currentAchievements = userAchievements.map(a => a.name);
     const newAchievements = [];
 
     const addAchievement = (name) => {
       if (!currentAchievements.includes(name)) {
-        newAchievements.push({ name, date: new Date().toISOString() });
+        const achievement = { name, date: new Date().toISOString() };
+        newAchievements.push(achievement);
+        dispatch(addAchievement(achievement));
+        
+        // Display achievement unlock message with custom styling
+        message.success({
+          content: `🏆 Achievement Unlocked: ${name}!`,
+          className: 'achievement-message',
+          duration: 4,
+          style: {
+            marginTop: '20vh',
+            padding: '10px 20px',
+            borderRadius: '8px',
+            background: '#f6ffed',
+            border: '1px solid #b7eb8f',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+          }
+        });
       }
     };
 
     console.log("userBidded", userBidded.length);
 
+    // Basic achievements
     if (userBidded.length === 0) addAchievement("First One");
     if (userCars.length >= 3) addAchievement("Starter Pack");
     if (userCars.length >= 5) addAchievement("New Collector");
     if (userSold.length >= 1) addAchievement("Quick Sale");
+    if (userCars.length >= 10) addAchievement("Mid-Range Collector");
+    if (userCars.length >= 15) addAchievement("Collector's Dream");
+    if (userCars.length >= 20) addAchievement("Collector King");
+    if (userCars.length >= 25) addAchievement("Elite Collector");
+    if (userCars.length >= 30) addAchievement("Ultimate Collector");
+    if (userCars.length >= 50) addAchievement("Grand Collector");
+    if (userCars.length >= 100) addAchievement("Insane Collector");
+    if (userCars.length >= 200) addAchievement("Legendary Collector");
 
-    const userAuctionsParticipated = userBidded.map(bid => bid.auctionId);
-    const uniqueAuctions = new Set(userAuctionsParticipated);
+    // Auction participation achievements
+    const uniqueAuctions = new Set(userBidded.map(bid => bid.auctionId));
+    if (uniqueAuctions.size >= 1) addAchievement("Rookie");
     if (uniqueAuctions.size >= 20) addAchievement("Auction Veteran");
+    if (uniqueAuctions.size >= 25) addAchievement("Intermediate Bidder");
+    if (uniqueAuctions.size >= 50) addAchievement("Frequent Bidder");
+    if (uniqueAuctions.size >= 100) addAchievement("Auction Champ");
 
+    // Money related achievements
     const totalSpent = userBidded.reduce((sum, bid) => sum + bid.bidValue, 0);
+    if (totalSpent > 100000) addAchievement("High Roller");
+    if (totalSpent > 200000) addAchievement("High Stakes");
     if (totalSpent > 500000) addAchievement("Big Spender");
+    if (totalSpent > 500000) addAchievement("Whale Bidder");
 
+    // First bid achievements
     const uniqueAuctionsFirstBid = new Set(
       userBidded.filter(bid => {
-        const auction = userAuctionsParticipated.find(a => a.id === bid.auctionId);
-        return auction && auction.lastBidPlayer === userNickname;
+        const auction = userBidded.find(a => a.auctionId === bid.auctionId);
+        return auction && auction.isFirstBid;
       }).map(bid => bid.auctionId)
     ).size;
     if (uniqueAuctionsFirstBid >= 5) addAchievement("Early Bird");
 
-    const bargainWin = userBidded.some(bid => {
-      const auction = userAuctionsParticipated.find(a => a.id === bid.auctionId);
-      return auction && auction.status === "Finished" && bid.bidValue <= auction.buy * 0.9;
-    });
-    if (bargainWin) addAchievement("Bargain Hunter");
-
+    // Selling achievements
     if (userSold.length > 0) {
-      const profitSales = userSold.some(carId => {
-        const car = userCars.find(car => car.id === carId);
-        return car && car.sellPrice > car.purchasePrice;
-      });
-      if (profitSales) addAchievement("First Profit");
+      const profitSales = userSold.filter(sale => sale.profit > 0);
+      if (profitSales.length > 0) addAchievement("First Profit");
+      if (profitSales.length >= 5) addAchievement("Profit Dealer");
+      if (profitSales.length >= 10) addAchievement("Silver Dealer");
+      if (profitSales.length >= 15) addAchievement("Gold Dealer");
+      if (profitSales.length >= 50) addAchievement("Pro Seller");
+      if (profitSales.length >= 100) addAchievement("Market Dominator");
+
+      const totalProfit = profitSales.reduce((sum, sale) => sum + sale.profit, 0);
+      if (totalProfit >= 50000) addAchievement("Savvy Investor");
+      if (totalProfit >= 100000) addAchievement("Money Maker");
+      if (totalProfit >= 1000000) addAchievement("Wealthy Trader");
     }
 
-    if (userBidded.some(bid => bid.bidValue > 100000)) addAchievement("High Roller");
-
+    // Sync with backend if there are new achievements
     if (newAchievements.length > 0) {
       const updatedAchievements = [...userAchievements, ...newAchievements];
       await client.graphql({
@@ -544,8 +582,6 @@ export async function checkAndUpdateAchievements(user) {
           },
         },
       });
-
-      newAchievements.forEach(ach => message.success(`Achievement unlocked: ${ach.name}`));
     }
   } catch (error) {
     console.error("Error updating achievements:", error);

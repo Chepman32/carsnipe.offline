@@ -387,9 +387,6 @@ const CarsStore = () => {
         purchaseDate: new Date().toISOString(),
       }));
 
-      // Remove car from available cars
-      setCars(prevCars => prevCars.filter(c => c.id !== car.id));
-
       // Close the modal
       setCarDetailsVisible(false);
       setSelectedCar(null);
