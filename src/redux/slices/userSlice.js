@@ -1,5 +1,16 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+// Load cars from localStorage if available
+const loadCarsFromStorage = () => {
+  try {
+    const savedCars = localStorage.getItem('userCars');
+    return savedCars ? JSON.parse(savedCars) : [];
+  } catch (error) {
+    console.error('Error loading cars from localStorage:', error);
+    return [];
+  }
+};
+
 const initialState = {
   nickname: "",
   money: 0,
@@ -18,7 +29,7 @@ const initialState = {
     totalBids: 0,
     moneySpent: 0,
   },
-  cars: [], // Add cars array to store purchased cars
+  cars: loadCarsFromStorage(), // Load cars from localStorage
 };
 
 const userSlice = createSlice({
@@ -60,11 +71,18 @@ const userSlice = createSlice({
     },
     addCar: (state, action) => {
       state.cars.push(action.payload);
+      // Save to localStorage whenever cars are updated
+      localStorage.setItem('userCars', JSON.stringify(state.cars));
     },
     removeCar: (state, action) => {
       state.cars = state.cars.filter((car) => car.id !== action.payload);
+      // Save to localStorage whenever cars are updated
+      localStorage.setItem('userCars', JSON.stringify(state.cars));
     },
-    resetUser: () => initialState,
+    resetUser: (state) => {
+      localStorage.removeItem('userCars'); // Clear cars from localStorage on reset
+      return initialState;
+    },
   },
 });
 

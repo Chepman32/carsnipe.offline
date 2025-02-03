@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Modal, Spin } from "antd";
+import { Modal, Spin, Tooltip } from "antd";
 import "./carsPage.css";
 import CarDetailsModalRow from "./CarDetailsModalRow";
 import { getImageSource, playSwitchSound } from "../../functions";
@@ -17,6 +17,7 @@ const CarDetailsModal = ({
 }) => {
   const totalRows = 4
   const [focusedRow, setFocusedRow] = useState(0);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -66,7 +67,20 @@ const CarDetailsModal = ({
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, [visible, focusedRow, selectedCar, buyCar, showNewAuction, forAuction, totalRows]);
-  
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   return (
     <Modal
       centered
@@ -92,11 +106,16 @@ const CarDetailsModal = ({
         />
       )}
       {forAuction && (
-        <CarDetailsModalRow
-          handler={showNewAuction}
-          text={loadingNewAuction ? <Spin /> : "Sell on auction"}
-          selected={focusedRow === 0}
-        />
+        <Tooltip title={!isOnline ? "This feature requires internet connection" : ""}>
+          <div style={{ opacity: !isOnline ? 0.5 : 1 }}>
+            <CarDetailsModalRow
+              handler={isOnline ? showNewAuction : undefined}
+              text={loadingNewAuction ? <Spin /> : "Sell on auction"}
+              selected={focusedRow === 0}
+              disabled={!isOnline}
+            />
+          </div>
+        </Tooltip>
       )}
       <CarDetailsModalRow text="Show car info" selected={focusedRow === 1} />
       <CarDetailsModalRow text="Choose color" selected={focusedRow === 2} />

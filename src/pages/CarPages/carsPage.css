@@ -87,6 +87,16 @@
   border: 2px solid red;
 }
 
+.carDetailsModal__row.disabled {
+  pointer-events: none;
+  color: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.carDetailsModal__row.disabled:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
 /* Media Queries */
 @media (max-width: 1600px) {
   .carsPage__item {

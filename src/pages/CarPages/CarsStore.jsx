@@ -390,6 +390,10 @@ const CarsStore = () => {
       // Remove car from available cars
       setCars(prevCars => prevCars.filter(c => c.id !== car.id));
 
+      // Close the modal
+      setCarDetailsVisible(false);
+      setSelectedCar(null);
+
       message.success("Car purchased successfully!");
 
       // Play sound effect if enabled
