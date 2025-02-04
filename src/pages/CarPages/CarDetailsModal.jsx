@@ -4,6 +4,8 @@ import "./carsPage.css";
 import CarDetailsModalRow from "./CarDetailsModalRow";
 import { getImageSource, playSwitchSound } from "../../functions";
 import { isMobile } from "react-device-detect";
+import { useDispatch } from "react-redux";
+import { removeCar } from "../../redux/slices/userSlice";
 
 const CarDetailsModal = ({
   visible,
@@ -15,9 +17,11 @@ const CarDetailsModal = ({
   forAuction,
   showNewAuction,
 }) => {
-  const totalRows = 4
+  const totalRows = 5
   const [focusedRow, setFocusedRow] = useState(0);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  const displatch = useDispatch()
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -49,7 +53,8 @@ const CarDetailsModal = ({
               // Row 3 functionality goes here
               break;
             case 4:
-              // Last row functionality goes here
+              handleCancel();
+              displatch(removeCar(selectedCar.id))
               break;
             default:
               break;
@@ -95,15 +100,45 @@ const CarDetailsModal = ({
         forAuction && selectedCar && <img
         src={getImageSource(selectedCar.make, selectedCar.model)}
         alt={`${selectedCar.make} ${selectedCar.model}`}
-  className='carsPage__item__image'
+  className='carsPage__modal__image'
       />
       }
-      {!forAuction && (
-        <CarDetailsModalRow
-          handler={() => buyCar(selectedCar)}
-          text={loadingBuy ? <Spin /> : "Buy"}
-          selected={focusedRow === 0}
-        />
+      {!forAuction && visible && selectedCar && (
+        <>
+          <CarDetailsModalRow
+            focused={focusedRow === 0}
+            title="Buy car"
+            handler={() => buyCar(selectedCar)}
+            text={loadingBuy ? <Spin /> : "Buy"}
+            loading={loadingBuy}
+            price={selectedCar.price}
+            isOnline={isOnline}
+          />
+          <CarDetailsModalRow
+            focused={focusedRow === 1}
+            title="Characteristics"
+            characteristics={[
+              { label: 'Make', value: selectedCar.make },
+              { label: 'Model', value: selectedCar.model },
+              { label: 'Year', value: selectedCar.year },
+            ]}
+          />
+          <CarDetailsModalRow
+            focused={focusedRow === 2}
+            title="Description"
+            description={selectedCar.description}
+          />
+          <CarDetailsModalRow
+            focused={focusedRow === 3}
+            title="Price"
+            price={selectedCar.price}
+          />
+          <CarDetailsModalRow
+            focused={focusedRow === 4}
+            title="Delete car"
+            danger={true}
+          />
+        </>
       )}
       {forAuction && (
         <Tooltip title={!isOnline ? "This feature requires internet connection" : ""}>
@@ -120,6 +155,11 @@ const CarDetailsModal = ({
       <CarDetailsModalRow text="Show car info" selected={focusedRow === 1} />
       <CarDetailsModalRow text="Choose color" selected={focusedRow === 2} />
       <CarDetailsModalRow text="Buy as a gift" selected={focusedRow === 3} />
+      {
+        forAuction && (
+          <CarDetailsModalRow text="Remove the car from garage" selected={focusedRow === 4} />
+        )
+      }
     </Modal>
   );
 };

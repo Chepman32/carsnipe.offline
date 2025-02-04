@@ -217,7 +217,6 @@ const CarsStore = () => {
         return;
       }
 
-      // Find current make and position
       const currentMake = makes.find((make) => {
         const makeStartIndex = cars.indexOf(carsByMake[make][0]);
         const makeEndIndex = makeStartIndex + carsByMake[make].length - 1;

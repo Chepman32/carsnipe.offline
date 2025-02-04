@@ -35,6 +35,10 @@
   object-fit: contain;
 }
 
+.carsPage__modal__image {
+  max-width: 80%;
+}
+
 .carsPage__model {
   font-size: 2vh;
   font-weight: 500;
@@ -48,6 +52,45 @@
 .carCard__price {
   font-size: 1rem;
   font-weight: 600;
+}
+
+.carDetailsModal__row {
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.carDetailsModal__row.focused {
+  background-color: #f5f5f5;
+}
+
+.carDetailsModal__row.danger {
+  border: 1px solid #ff4d4f;
+}
+
+.carDetailsModal__row.danger:hover {
+  background-color: #fff1f0;
+}
+
+.characteristics-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.characteristic-item {
+  display: flex;
+  gap: 8px;
+}
+
+.characteristic-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.characteristic-value {
+  color: #333;
 }
 
 .carsPage__type {
@@ -68,6 +111,9 @@
 
 .carDetailsModal {
   width: 60%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .carDetailsModal__row {
