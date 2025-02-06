@@ -114,30 +114,6 @@ const CarDetailsModal = ({
             price={selectedCar.price}
             isOnline={isOnline}
           />
-          <CarDetailsModalRow
-            focused={focusedRow === 1}
-            title="Characteristics"
-            characteristics={[
-              { label: 'Make', value: selectedCar.make },
-              { label: 'Model', value: selectedCar.model },
-              { label: 'Year', value: selectedCar.year },
-            ]}
-          />
-          <CarDetailsModalRow
-            focused={focusedRow === 2}
-            title="Description"
-            description={selectedCar.description}
-          />
-          <CarDetailsModalRow
-            focused={focusedRow === 3}
-            title="Price"
-            price={selectedCar.price}
-          />
-          <CarDetailsModalRow
-            focused={focusedRow === 4}
-            title="Delete car"
-            danger={true}
-          />
         </>
       )}
       {forAuction && (

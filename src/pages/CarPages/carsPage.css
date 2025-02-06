@@ -125,7 +125,7 @@
   background: linear-gradient(90deg, lightblue, white);
   font-size: 2vh;
   font-weight: 600;
-  cursor: pointer;
+  cursor: pointer !important;
   padding: 8px;
 }
 
