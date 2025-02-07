@@ -29,25 +29,7 @@ import "./carsPage.css";
 const { Option } = Select;
 const client = generateClient();
 
-function getItemsPerRow() {
-  const windowWidth = window.innerWidth;
-  let itemWidth;
-  if (windowWidth <= 512) {
-    itemWidth = windowWidth * 0.95;
-  } else if (windowWidth <= 768) {
-    itemWidth = windowWidth * 0.48;
-  } else if (windowWidth <= 900) {
-    itemWidth = windowWidth * 0.48;
-  } else if (windowWidth <= 1200) {
-    itemWidth = windowWidth * 0.31;
-  } else if (windowWidth <= 1600) {
-    itemWidth = windowWidth * 0.23;
-  } else {
-    itemWidth = windowWidth * 0.19;
-  }
-  const itemsPerRow = Math.floor((windowWidth - 40) / (itemWidth + 10));
-  return Math.max(1, itemsPerRow);
-}
+
 
 const CarsStore = () => {
   const dispatch = useDispatch();
@@ -84,9 +66,8 @@ const CarsStore = () => {
       dispatch(setIsTopCar(false));
       return;
     }
-    const itemsPerRow = getItemsPerRow();
     const indexInFirstMake = firstMakeCars.findIndex((car) => car.id === focusedCar.id);
-    if (indexInFirstMake >= 0 && indexInFirstMake < itemsPerRow) {
+    if (indexInFirstMake === 0) {
       dispatch(setIsTopCar(true));
     } else {
       dispatch(setIsTopCar(false));
@@ -188,9 +169,6 @@ const CarsStore = () => {
     if (focusedZone === FOCUS_ZONES.HEADER) {
       setSelectedCarIndex(null);
     }
-    if (focusedZone === FOCUS_ZONES.PAGE) {
-      setSelectedCarIndex(0);
-    }
     if (cars.indexOf(selectedCar) === 0) {
       dispatch(setCurrentFocusedElement(TOP_CAR));
     }
@@ -205,143 +183,118 @@ const CarsStore = () => {
   useEffect(() => {
     const handleKeyDown = (event) => {
       const { key } = event;
-      if (carDetailsVisible || focusedZone === FOCUS_ZONES.HEADER) return;
+      if (carDetailsVisible || focusedZone === FOCUS_ZONES.HEADER || focusedZone === FOCUS_ZONES.QUICK_MENU) return;
       
-      const itemsPerRowLocal = getItemsPerRow();
       const carsByMake = groupCarsByMake(cars);
       const makes = Object.keys(carsByMake);
       
-      if (!selectedCarIndex && selectedCarIndex !== 0) {
+      if (!focusedCar && cars.length > 0) {
         setSelectedCarIndex(0);
         setFocusedCar(cars[0]);
         return;
       }
-
-      const currentMake = makes.find((make) => {
+    
+      // Get current car's position information
+      const currentCarIndex = cars.findIndex(car => car.id === focusedCar?.id);
+      const currentMake = makes.find(make => {
         const makeStartIndex = cars.indexOf(carsByMake[make][0]);
         const makeEndIndex = makeStartIndex + carsByMake[make].length - 1;
-        return selectedCarIndex >= makeStartIndex && selectedCarIndex <= makeEndIndex;
+        return currentCarIndex >= makeStartIndex && currentCarIndex <= makeEndIndex;
       });
-
+    
       if (!currentMake) return;
-
+    
       const currentMakeCars = carsByMake[currentMake];
       const currentMakeStartIndex = cars.indexOf(currentMakeCars[0]);
       const currentMakeEndIndex = currentMakeStartIndex + currentMakeCars.length - 1;
-      const positionInMake = selectedCarIndex - currentMakeStartIndex;
-      const currentRow = Math.floor(positionInMake / itemsPerRowLocal);
-      const positionInRow = positionInMake % itemsPerRowLocal;
-      const scroller = document.getElementById("scroller");
-      const scrollDistance = scroller ? scroller.scrollHeight * 0.04 : 0;
-
-      if (focusedZone !== FOCUS_ZONES.QUICK_MENU) {
-        switch (key) {
-          case "ArrowRight": {
-            // Only move right if there's another car in the same make
-            if (selectedCarIndex < currentMakeEndIndex) {
-              const nextIndex = selectedCarIndex + 1;
-              setSelectedCarIndex(nextIndex);
-              setFocusedCar(cars[nextIndex]);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) {
-                playSwitchSound();
-              }
-            }
-            break;
+      const currentMakeIndex = makes.indexOf(currentMake);
+    
+      const handleNavigation = (nextIndex) => {
+        if (nextIndex >= 0 && nextIndex < cars.length) {
+          setSelectedCarIndex(nextIndex);
+          setFocusedCar(cars[nextIndex]);
+          if (soundEffectsOn || soundEffectsOnQuickSettings) {
+            playSwitchSound();
           }
-          case "ArrowLeft": {
-            // Only move left if we're not at the start of the make
-            if (selectedCarIndex > currentMakeStartIndex) {
-              const prevIndex = selectedCarIndex - 1;
-              setSelectedCarIndex(prevIndex);
-              setFocusedCar(cars[prevIndex]);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) {
-                playSwitchSound();
-              }
-            }
-            break;
+          
+          // Scroll handling
+          const element = document.querySelector(`[data-car-id="${cars[nextIndex].id}"]`);
+          if (element) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+              inline: "nearest"
+            });
           }
-          case "ArrowDown": {
-            const nextRowStartIndex = currentMakeStartIndex + (currentRow + 1) * itemsPerRowLocal;
-            
-            // If next row exists in current make
-            if (nextRowStartIndex <= currentMakeEndIndex) {
-              const nextIndex = Math.min(nextRowStartIndex, currentMakeEndIndex);
-              setSelectedCarIndex(nextIndex);
-              setFocusedCar(cars[nextIndex]);
-            } else {
-              // Move to next make if it exists
-              const currentMakeIndex = makes.indexOf(currentMake);
-              if (currentMakeIndex < makes.length - 1) {
-                const nextMake = makes[currentMakeIndex + 1];
-                const nextMakeStartIndex = cars.indexOf(carsByMake[nextMake][0]);
-                setSelectedCarIndex(nextMakeStartIndex);
-                setFocusedCar(cars[nextMakeStartIndex]);
-              }
-            }
-            
-            if (soundEffectsOn || soundEffectsOnQuickSettings) {
-              playSwitchSound();
-            }
-            if (scroller) {
-              scroller.scrollBy({
-                top: scrollDistance,
-                behavior: "smooth"
-              });
-            }
-            break;
-          }
-          case "ArrowUp": {
-            // If in first row of first make, go to header
-            if (currentMake === makes[0] && currentRow === 0) {
-              dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
-              dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
-              return;
-            }
-
-            const prevRowStartIndex = currentMakeStartIndex + (currentRow - 1) * itemsPerRowLocal;
-            
-            // If previous row exists in current make
-            if (currentRow > 0) {
-              setSelectedCarIndex(prevRowStartIndex);
-              setFocusedCar(cars[prevRowStartIndex]);
-            } else {
-              // Move to previous make if it exists
-              const currentMakeIndex = makes.indexOf(currentMake);
-              if (currentMakeIndex > 0) {
-                const prevMake = makes[currentMakeIndex - 1];
-                const prevMakeCars = carsByMake[prevMake];
-                const prevMakeStartIndex = cars.indexOf(prevMakeCars[0]);
-                const lastRowIndex = Math.floor((prevMakeCars.length - 1) / itemsPerRowLocal);
-                const targetIndex = prevMakeStartIndex + lastRowIndex * itemsPerRowLocal;
-                setSelectedCarIndex(targetIndex);
-                setFocusedCar(cars[targetIndex]);
-              }
-            }
-            
-            if (soundEffectsOn || soundEffectsOnQuickSettings) {
-              playSwitchSound();
-            }
-            if (scroller) {
-              scroller.scrollBy({
-                top: -scrollDistance,
-                behavior: "smooth"
-              });
-            }
-            break;
-          }
-          case "Enter": {
-            if (selectedCarIndex !== null) {
-              setSelectedCar(cars[selectedCarIndex]);
-              showCarDetailsModal();
-              if (soundEffectsOn || soundEffectsOnQuickSettings) {
-                playOpeningSound();
-              }
-            }
-            break;
-          }
-          default:
-            break;
         }
+      };
+    
+      switch (key) {
+        case "ArrowRight": {
+          // Move to next car in same make, or first car of next make
+          if (currentCarIndex < currentMakeEndIndex) {
+            handleNavigation(currentCarIndex + 1);
+          } else if (currentMakeIndex < makes.length - 1) {
+            const nextMake = makes[currentMakeIndex + 1];
+            const nextMakeStartIndex = cars.indexOf(carsByMake[nextMake][0]);
+            handleNavigation(nextMakeStartIndex);
+          }
+          break;
+        }
+        
+        case "ArrowLeft": {
+          // Move to previous car in same make, or last car of previous make
+          if (currentCarIndex > currentMakeStartIndex) {
+            handleNavigation(currentCarIndex - 1);
+          } else if (currentMakeIndex > 0) {
+            const prevMake = makes[currentMakeIndex - 1];
+            const prevMakeCars = carsByMake[prevMake];
+            const prevMakeStartIndex = cars.indexOf(prevMakeCars[0]);
+            const prevMakeEndIndex = prevMakeStartIndex + prevMakeCars.length - 1;
+            handleNavigation(prevMakeEndIndex);
+          }
+          break;
+        }
+        
+        case "ArrowDown": {
+          // Move down one row in the same make section
+          const currentMakeCars = carsByMake[currentMake];
+          const positionInMake = currentCarIndex - currentMakeStartIndex;
+          const nextRowPosition = currentMakeStartIndex + (positionInMake + 1);
+          
+          if (positionInMake % 2 === 0 && nextRowPosition <= currentMakeEndIndex) {
+            handleNavigation(nextRowPosition);
+          }
+          break;
+        }
+        
+        case "ArrowUp": {
+          // Move up one row in the same make section
+          const positionInMake = currentCarIndex - currentMakeStartIndex;
+          
+          if (positionInMake % 2 === 1) {
+            handleNavigation(currentCarIndex - 1);
+          } else if (currentMakeIndex === 0) {
+            dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
+            dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
+            setFocusedCar(null);
+          }
+          break;
+        }
+        
+        case "Enter": {
+          if (focusedCar) {
+            setSelectedCar(focusedCar);
+            showCarDetailsModal();
+            if (soundEffectsOn || soundEffectsOnQuickSettings) {
+              playOpeningSound();
+            }
+          }
+          break;
+        }
+        
+        default:
+          break;
       }
     };
 
@@ -453,12 +406,24 @@ const CarsStore = () => {
               const nameB = `${b.make || ""} ${b.model || ""}`.trim();
               return nameA.localeCompare(nameB);
             });
+
+            // Split cars into two rows
+            const topRowCars = [];
+            const bottomRowCars = [];
+            sortedMakeCars.forEach((car, index) => {
+              if (index % 2 === 0) {
+                topRowCars.push(car);
+              } else {
+                bottomRowCars.push(car);
+              }
+            });
+
             return (
               <div key={make} className="make-section">
                 <h2 className="make-name">{make}</h2>
-                <section className="make-section-container">
-                  <div className="make-cars">
-                    {sortedMakeCars.map((car) => {
+                <div className="make-grid">
+                  <div className="make-row">
+                    {topRowCars.map((car) => {
                       const absoluteIndex = cars.indexOf(car);
                       return (
                         <CarCard
@@ -478,7 +443,28 @@ const CarsStore = () => {
                       );
                     })}
                   </div>
-                </section>
+                  <div className="make-row">
+                    {bottomRowCars.map((car) => {
+                      const absoluteIndex = cars.indexOf(car);
+                      return (
+                        <CarCard
+                          key={car.id}
+                          focusedCar={focusedCar}
+                          selectedCar={absoluteIndex === selectedCarIndex ? car : null}
+                          setSelectedCar={(selectedCar) => {
+                            setSelectedCar(selectedCar);
+                            setSelectedCarIndex(absoluteIndex);
+                            showCarDetailsModal();
+                          }}
+                          showCarDetailsModal={showCarDetailsModal}
+                          car={car}
+                          getImageSource={getImageSource}
+                          showPrice={true}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             );
           })}
