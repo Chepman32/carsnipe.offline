@@ -149,6 +149,25 @@ const CarsStore = () => {
     fetchAllCars();
   }, [fetchCars]);
 
+  // Add horizontal scrolling with vertical wheel
+  useEffect(() => {
+    const carsContainer = document.querySelector('.cars');
+    if (carsContainer) {
+      const handleWheel = (e) => {
+        if (e.deltaY !== 0) {
+          e.preventDefault();
+          carsContainer.scrollLeft += e.deltaY * 3; // Increased scroll speed by 3x
+        }
+      };
+      carsContainer.addEventListener('wheel', handleWheel, { passive: false });
+      
+      // Cleanup
+      return () => {
+        carsContainer.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, []);
+
   const groupCarsByMake = (cars) => {
     const groups = cars.reduce((groups, car) => {
       const make = car.make ? car.make.trim().toUpperCase() : "UNKNOWN";
@@ -399,7 +418,7 @@ const CarsStore = () => {
       {carsLoading ? (
         <Spin size="large" />
       ) : (
-        <div className="cars__container" id="scroller">
+        <div className="cars__container">
           {Object.entries(groupCarsByMake(cars)).map(([make, makeCars]) => {
             const sortedMakeCars = makeCars.sort((a, b) => {
               const nameA = `${a.make || ""} ${a.model || ""}`.trim();
