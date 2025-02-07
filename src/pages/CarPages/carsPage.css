@@ -6,7 +6,7 @@
   width: 100vw;
   height: 100vh;
   background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
-  padding: 20px;
+  padding: 4px;
   box-sizing: border-box;
   overflow-x: auto;
   overflow-y: hidden;
@@ -14,10 +14,10 @@
 
 .cars__container {
   display: inline-flex;
-  gap: 40px;
-  height: 100%;
-  padding: 10px 20px;
+  gap: 12px;
+  padding: 4px;
   white-space: nowrap;
+  height: 100vh;
 }
 
 .cars::-webkit-scrollbar {
@@ -37,15 +37,15 @@
 .make-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  height: calc(100% - 40px);
+  gap: 2px;
+  height: calc(100% - 30px);
   min-width: min-content;
 }
 
 .make-row {
   display: flex;
-  gap: 16px;
-  height: calc(50% - 10px);
+  gap: 12px;
+  height: 50%;
   min-width: min-content;
 }
 
@@ -59,18 +59,18 @@
 
 
 .carsPage__item {
-  width: 300px;
-  height: 38vh;
+  width: 46vh;
+  height: 46vh;
   flex: 0 0 auto;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  padding: 16px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
   position: relative;
   transition: all 0.3s ease;
   border: 2px solid transparent;
-  gap: 12px;
+  gap: 2px;
 }
 
 .carsPage__header {
@@ -101,11 +101,11 @@
 }
 
 .carsPage__image-container {
-  height: 45%;
+  height: 70%;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;
+  padding: 0;
 }
 
 .carsPage__item__image {
@@ -383,10 +383,11 @@
 }
 
 .make-name {
-  font-size: 18px;
-  margin: 0 0 8px 0;
-  font-weight: 500;
+  font-size: 24px;
+  margin: 0;
+  font-weight: 600;
   white-space: nowrap;
+  text-transform: uppercase;
 
   padding-left: 1vw;
   background: url(https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS1HzAqyKcsouEUVEV05ID1OOIZ5FKIw8g8JA&s);
