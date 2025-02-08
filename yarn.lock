@@ -11402,6 +11402,11 @@ react-scripts@5.0.1:
   optionalDependencies:
     fsevents "^2.3.2"
 
+react-slot-counter@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/react-slot-counter/-/react-slot-counter-3.2.0.tgz#e50f7da7b18d6893e25d4fc097806a2d910a4463"
+  integrity sha512-QsT2l/cfVUVul4Fh5TsK8AAwz7GkoAyjDNzwsToqxjjjUwqZC2ZojzEi5KyuSDu4SWpfe9AB4oIbN8BkGRXc7A==
+
 react-slot-machine-gen@^1.3.3:
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/react-slot-machine-gen/-/react-slot-machine-gen-1.3.3.tgz#4c7fcf1de0ce858630b9b639b58c9b7743974ad4"

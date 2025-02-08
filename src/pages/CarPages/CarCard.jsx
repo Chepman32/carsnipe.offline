@@ -16,18 +16,10 @@ export default function CarCard({ focusedCar, selectedCar, setSelectedCar, showC
     >
       <div className="carsPage__header">
         <div className="carsPage__title">
-          <h2 className="carsPage__make">{car.make}</h2>
           <div className="carsPage__subtitle">
             <span className="carsPage__model">{car.model}</span>
             <span className="carsPage__year">{car.year}</span>
           </div>
-        </div>
-        <div className={`carsPage__type ${car.type.toLowerCase()}`}>
-          {car.type === 'COMMON' && 'B'}
-          {car.type === 'RARE' && 'A'}
-          {car.type === 'EPIC' && 'S'}
-          {car.type === 'LEGENDARY' && 'S1'}
-          <span className="carsPage__rating">{car.price}</span>
         </div>
       </div>
       <div className="carsPage__image-container">
@@ -37,9 +29,13 @@ export default function CarCard({ focusedCar, selectedCar, setSelectedCar, showC
           className='carsPage__item__image'
         />
       </div>
-      {car.recommended && (
-        <div className="carsPage__recommended">RECOMMENDED</div>
-      )}
+      <div className={`carsPage__type ${car.type.toLowerCase()}`}>
+          {car.type === 'COMMON' && 'B'}
+          {car.type === 'RARE' && 'A'}
+          {car.type === 'EPIC' && 'S'}
+          {car.type === 'LEGENDARY' && 'S1'}
+          <span className="carsPage__rating">{car.type}</span>
+        </div>
     </div>
   )
 }
