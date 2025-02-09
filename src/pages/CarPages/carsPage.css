@@ -35,6 +35,17 @@
 }
 
 .make-grid {
+  position: relative;
+}
+
+.make-grid[data-focused="true"] .make-section[data-focused="true"],
+.make-grid[data-focused="true"] .car-card[data-focused="true"] {
+  box-shadow: 0 0 0 2px #fff, 0 0 10px rgba(255, 255, 255, 0.5);
+  transform: scale(1.02);
+  z-index: 1;
+}
+
+.make-grid {
   display: flex;
   flex-direction: column;
   gap: 2px;

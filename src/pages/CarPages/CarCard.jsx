@@ -2,15 +2,27 @@ import { Flex } from 'antd'
 import React from 'react'
 import "./carsPage.css";
 import { getCarTypeColor, playOpeningSound } from '../../functions';
+import { useDispatch } from 'react-redux';
+import { FOCUS_ZONES, setCurrentFocusedElement, setFocusedZone } from '../../redux/slices/focusSlice';
 
-export default function CarCard({ focusedCar, selectedCar, setSelectedCar, showCarDetailsModal, car, getImageSource, showPrice }) {
+export default function CarCard({ focusedCar, selectedCar, setSelectedCar, showCarDetailsModal, car, getImageSource, showPrice, cars, setFocusPosition, setFocusedCar }) {
+  const dispatch = useDispatch();
+
+  const handleClick = () => {
+    playOpeningSound();
+    setSelectedCar(car);
+    setFocusedCar(car);
+    showCarDetailsModal();
+    dispatch(setFocusedZone(FOCUS_ZONES.PAGE));
+    const carIndex = cars.indexOf(car);
+    const row = Math.floor(carIndex / 2);
+    const col = carIndex % 2;
+    setFocusPosition({ row, col });
+  };
+
   return (
     <div
-      onClick={() => {
-        playOpeningSound()
-        setSelectedCar(car);
-        showCarDetailsModal();
-      }}
+      onClick={handleClick}
       data-car-id={car.id}
       className={focusedCar?.id === car.id ? "carsPage__item carsPage__item_selected" : "carsPage__item"}
     >

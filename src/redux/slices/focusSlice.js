@@ -50,8 +50,6 @@ const focusSlice = createSlice({
   reducers: {
     handleKeyDown(state, action) {
       const key = action.payload;
-      console.log("focusedzone:", state.focusedZone);
-      console.log("currentFocusedElement:", state.currentFocusedElement);
       switch (state.focusedZone) {
         case FOCUS_ZONES.HEADER: {
           if (key === "ArrowLeft") {
