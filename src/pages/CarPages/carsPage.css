@@ -138,10 +138,15 @@
   object-fit: contain;
 }
 
-.carsPage__item:hover,
+.carsPage__item:hover {
+  transform: scale(1.02);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
 .carsPage__item_selected {
   transform: scale(1.02);
-  border-color: rgba(255, 255, 255, 0.2);
+  border: 2px solid #ff0000;
   background: rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
