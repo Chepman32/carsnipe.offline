@@ -5,19 +5,18 @@ import { getCarTypeColor, playOpeningSound } from '../../functions';
 import { useDispatch } from 'react-redux';
 import { FOCUS_ZONES, setCurrentFocusedElement, setFocusedZone } from '../../redux/slices/focusSlice';
 
-export default function CarCard({ focusedCar, selectedCar, setSelectedCar, showCarDetailsModal, car, getImageSource, showPrice, cars, setFocusPosition, setFocusedCar }) {
+export default function CarCard({ focusedCar, selectedCar, setSelectedCar, showCarDetailsModal, car, getImageSource, showPrice, cars, setFocusPosition, setFocusedCar, column, row }) {
   const dispatch = useDispatch();
 
   const handleClick = () => {
+    console.log("row:", row)
+    console.log("column:", column)
     playOpeningSound();
     setSelectedCar(car);
     setFocusedCar(car);
     showCarDetailsModal();
     dispatch(setFocusedZone(FOCUS_ZONES.PAGE));
-    const carIndex = cars.indexOf(car);
-    const row = Math.floor(carIndex / 2);
-    const col = carIndex % 2;
-    setFocusPosition({ row, col });
+    setFocusPosition({ row, column });
   };
 
   return (
