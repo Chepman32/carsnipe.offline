@@ -39,78 +39,11 @@ const CarsStore = () => {
   const [loadingBuy, setLoadingBuy] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
   const [focusedCar, setFocusedCar] = useState(null);
-  const [focusPosition, setFocusPosition] = useState({ row: 0, col: 0 });
   const [form] = Form.useForm();
   const [carDetailsVisible, setCarDetailsVisible] = useState(false);
   const [selectedCarIndex, setSelectedCarIndex] = useState(0);
   const [creditWarningModalvisible, setCreditWarningModalvisible] = useState(false);
   const [carsLoading, setCarsLoading] = useState(false);
-
-  const handleKeyDown = useCallback((e) => {
-    const itemsPerRow = 4; // Number of items in each row
-    const currentIndex = focusPosition.row * itemsPerRow + focusPosition.col;
-    const totalItems = cars.length;
-
-    console.log(`Currently focused on row ${focusPosition.row}, column ${focusPosition.col}`);
-
-    switch (e.key) {
-      case "ArrowUp":
-        if (focusPosition.row === 0) {
-          // If in first row, move to manufacturers line
-          dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
-        } else {
-          // Move to the item above
-          setFocusPosition({ row: focusPosition.row - 1, col: focusPosition.col });
-        }
-        break;
-
-      case "ArrowDown":
-        if (focusPosition.row === 0) {
-          // If in first row, move to second row if item exists
-          const targetIndex = itemsPerRow + focusPosition.col;
-          if (targetIndex < totalItems) {
-            setFocusPosition({ row: 1, col: focusPosition.col });
-          }
-        }
-        // Do nothing if in bottom row
-        break;
-
-      case "ArrowLeft":
-        if (focusPosition.col > 0) {
-          // Check if the item to the left exists
-          const targetIndex = currentIndex - 1;
-          if (targetIndex >= 0 && Math.floor(targetIndex / itemsPerRow) === focusPosition.row) {
-            setFocusPosition({ row: focusPosition.row, col: focusPosition.col - 1 });
-          }
-        }
-        break;
-
-      case "ArrowRight":
-        // Check if the item to the right exists
-        const targetIndex = currentIndex + 1;
-        if (targetIndex < totalItems && Math.floor(targetIndex / itemsPerRow) === focusPosition.row) {
-          setFocusPosition({ row: focusPosition.row, col: focusPosition.col + 1 });
-        }
-        break;
-
-      default:
-        break;
-    }
-  }, [cars.length, focusPosition, dispatch]);
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown, focusPosition]);
-
-  useEffect(() => {
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown, focusPosition]);
 
   const soundEffectsOnQuickSettings = useSelector((state) => state.quickSettings.soundEffectsOn);
   const soundEffectsOn = useSelector((state) => state.mainSettings.soundEffectsOn);
@@ -292,12 +225,9 @@ const CarsStore = () => {
     
       const currentMakeCars = carsByMake[currentMake];
       const currentMakeStartIndex = cars.indexOf(currentMakeCars[0]);
+      const currentMakeEndIndex = currentMakeStartIndex + currentMakeCars.length - 1;
       const currentMakeIndex = makes.indexOf(currentMake);
-      
-      // Calculate row and column position
-      const positionInMake = currentCarIndex - currentMakeStartIndex;
-      const currentRow = Math.floor(positionInMake / 2);
-      
+    
       const handleNavigation = (nextIndex) => {
         if (nextIndex >= 0 && nextIndex < cars.length) {
           setSelectedCarIndex(nextIndex);
@@ -320,50 +250,53 @@ const CarsStore = () => {
     
       switch (key) {
         case "ArrowRight": {
-          // Move to the next manufacturer in the same row
-          if (currentMakeIndex < makes.length - 1) {
+          // Move to next car in same make, or first car of next make
+          if (currentCarIndex < currentMakeEndIndex) {
+            handleNavigation(currentCarIndex + 1);
+          } else if (currentMakeIndex < makes.length - 1) {
             const nextMake = makes[currentMakeIndex + 1];
             const nextMakeStartIndex = cars.indexOf(carsByMake[nextMake][0]);
-            const nextIndex = nextMakeStartIndex + (currentRow * 2);
-            if (nextIndex < cars.length) {
-              handleNavigation(nextIndex);
-            }
+            handleNavigation(nextMakeStartIndex);
           }
           break;
         }
         
         case "ArrowLeft": {
-          // Move to the previous manufacturer in the same row
-          if (currentMakeIndex > 0) {
+          // Move to previous car in same make, or last car of previous make
+          if (currentCarIndex > currentMakeStartIndex) {
+            handleNavigation(currentCarIndex - 1);
+          } else if (currentMakeIndex > 0) {
             const prevMake = makes[currentMakeIndex - 1];
-            const prevMakeStartIndex = cars.indexOf(carsByMake[prevMake][0]);
-            const prevIndex = prevMakeStartIndex + (currentRow * 2);
-            if (prevIndex >= prevMakeStartIndex) {
-              handleNavigation(prevIndex);
-            }
+            const prevMakeCars = carsByMake[prevMake];
+            const prevMakeStartIndex = cars.indexOf(prevMakeCars[0]);
+            const prevMakeEndIndex = prevMakeStartIndex + prevMakeCars.length - 1;
+            handleNavigation(prevMakeEndIndex);
           }
           break;
         }
         
         case "ArrowDown": {
-          // Move down to the next row if in first row
-          if (currentRow === 0) {
-            const nextRowIndex = currentMakeStartIndex + 1;
-            if (nextRowIndex < cars.length && carsByMake[currentMake].length > 1) {
-              handleNavigation(nextRowIndex);
-            }
+          // Move down one row in the same make section
+          const currentMakeCars = carsByMake[currentMake];
+          const positionInMake = currentCarIndex - currentMakeStartIndex;
+          const nextRowPosition = currentMakeStartIndex + (positionInMake + 1);
+          
+          if (positionInMake % 2 === 0 && nextRowPosition <= currentMakeEndIndex) {
+            handleNavigation(nextRowPosition);
           }
           break;
         }
         
         case "ArrowUp": {
-          // Move up to manufacturer name if in first row, or to first row if in second row
-          if (currentRow === 0) {
+          // Move up one row in the same make section
+          const positionInMake = currentCarIndex - currentMakeStartIndex;
+          
+          if (positionInMake % 2 === 1) {
+            handleNavigation(currentCarIndex - 1);
+          } else if (currentMakeIndex === 0) {
             dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
             dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
             setFocusedCar(null);
-          } else if (currentRow === 1) {
-            handleNavigation(currentMakeStartIndex);
           }
           break;
         }
@@ -486,7 +419,7 @@ const CarsStore = () => {
         <Spin size="large" />
       ) : (
         <div className="cars__container">
-          {Object.entries(groupCarsByMake(cars)).map(([make, makeCars]) => {
+          {Object.entries(groupCarsByMake(cars)).map(([make, makeCars], makeIndex) => {
             const sortedMakeCars = makeCars.sort((a, b) => {
               const nameA = `${a.make || ""} ${a.model || ""}`.trim();
               const nameB = `${b.make || ""} ${b.model || ""}`.trim();
@@ -505,8 +438,8 @@ const CarsStore = () => {
             });
 
             return (
-              <div key={make} className="make-section">
-                <h2 className="make-name">{make}</h2>
+              <div key={make} className="make-section" data-make-index={makeIndex}>
+                <h2 className="make-name" data-make={make}>{make}</h2>
                 <div className="make-grid">
                   <div className="make-row">
                     {topRowCars.map((car) => {
@@ -525,9 +458,9 @@ const CarsStore = () => {
                           car={car}
                           getImageSource={getImageSource}
                           showPrice={true}
-                          cars={cars}
-                          setFocusPosition={setFocusPosition}
                           setFocusedCar={setFocusedCar}
+                          cars={cars}
+                          setFocusPosition={() => {}}
                         />
                       );
                     })}
@@ -549,9 +482,9 @@ const CarsStore = () => {
                           car={car}
                           getImageSource={getImageSource}
                           showPrice={true}
-                          cars={cars}
-                          setFocusPosition={setFocusPosition}
                           setFocusedCar={setFocusedCar}
+                          cars={cars}
+                          setFocusPosition={() => {}}
                         />
                       );
                     })}
