@@ -38,6 +38,7 @@ const CarsStore = () => {
   const [visible, setVisible] = useState(false);
   const [loadingBuy, setLoadingBuy] = useState(false);
   const [selectedCar, setSelectedCar] = useState(null);
+  const [focusedMake, setFocusedMake] = useState(null);
   const [focusedCar, setFocusedCar] = useState(null);
   const [form] = Form.useForm();
   const [carDetailsVisible, setCarDetailsVisible] = useState(false);
@@ -305,12 +306,15 @@ const CarsStore = () => {
 
           // Find position in make's top row
           const topRowIndex = makeTopRow.findIndex(c => c.id === focusedCar.id);
-          
-          if (topRowIndex !== -1 && topRowIndex < makeBottomRow.length) {
-            const nextCar = makeBottomRow[topRowIndex];
-            setFocusedCar(nextCar);
-            if (soundEffectsOn || soundEffectsOnQuickSettings) {
-              playSwitchSound();
+
+          if (topRowIndex !== -1) {
+            const makeBottomRow = sortedMakeCars.filter((_, i) => i % 2 === 1);
+            if (topRowIndex < makeBottomRow.length) {
+              const nextCar = makeBottomRow[topRowIndex];
+              setFocusedCar(nextCar);
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
             }
           }
           break;
@@ -327,7 +331,11 @@ const CarsStore = () => {
           const sortedMakeCars = makeCars.sort((a, b) => 
             `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`));
           const makeTopRow = sortedMakeCars.filter((_, i) => i % 2 === 0);
+          const topRowIndex = makeTopRow.findIndex(c => c.id === focusedCar.id);
           const makeBottomRow = sortedMakeCars.filter((_, i) => i % 2 === 1);
+          if (topRowIndex !== -1) {
+            setFocusedMake(makeTopRow[topRowIndex].make);
+          }
 
           // Find position in make's bottom row
           const bottomRowIndex = makeBottomRow.findIndex(c => c.id === focusedCar.id);
@@ -467,7 +475,6 @@ const CarsStore = () => {
         <div className="cars__container">
           {(() => {
             // Lists are now managed by the useEffect
-            
             return Object.entries(groupCarsByMake(cars)).map(([make, makeCars], makeIndex) => {
               const sortedMakeCars = makeCars.sort((a, b) => {
                 const nameA = `${a.make || ""} ${a.model || ""}`.trim();
@@ -487,7 +494,7 @@ const CarsStore = () => {
 
               return (
                 <div key={make} className="make-section" data-make-index={makeIndex}>
-                  <h2 className="make-name" data-make={make}>{make}</h2>
+                  <h2 className="make-name" data-make={make} style={{border: focusedMake === make ? "4px solid #fff" : ""}}>{make}</h2>
                   <div className="make-grid">
                     <div className="make-row">
                       {topRowCars.map((car) => {

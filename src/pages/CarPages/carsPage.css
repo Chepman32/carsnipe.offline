@@ -68,13 +68,11 @@
 }
 
 .make-name {
-  position: sticky;
   top: 0;
   color: white;
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 12px;
-  padding: 8px;
   background: linear-gradient(45deg, #1a1a1a, #2d2d2d);
   z-index: 2;
   border-radius: 4px;
@@ -83,8 +81,8 @@
 
 
 .carsPage__item {
-  width: 46vh;
-  height: 46vh;
+  width: 44vh;
+  height: 44vh;
   flex: 0 0 auto;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
@@ -194,18 +192,6 @@
   font-size: 20px;
   color: white;
   margin-left: 4px;
-}
-
-.carsPage__recommended {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  background: #E91E63;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: bold;
 }
 
 .carsPage__type.common {
