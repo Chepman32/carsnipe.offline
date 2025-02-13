@@ -134,7 +134,7 @@ const CarsStore = () => {
   }, [selectedCar, dispatch, cars, focusedCar]);
 
   useEffect(() => {
-    if (focusedZone === FOCUS_ZONES.PAGE && !focusedCar && cars.length > 0) {
+    if (focusedZone === FOCUS_ZONES.PAGE && !focusedCar && !focusedMake && cars.length > 0) {
       const carsByMake = groupCarsByMake(cars);
       const firstMake = Object.keys(carsByMake)[0];
       if (firstMake) {
@@ -145,8 +145,9 @@ const CarsStore = () => {
       }
     } else if (focusedZone === FOCUS_ZONES.HEADER && focusedCar) {
       setFocusedCar(null);
+      setFocusedMake(null);
     }
-  }, [focusedZone, focusedCar, cars]);
+  }, [focusedZone, focusedCar, cars, focusedMake]);
 
   useEffect(() => {
     if (focusedCar) {
@@ -195,7 +196,7 @@ const CarsStore = () => {
       const handleWheel = (e) => {
         if (e.deltaY !== 0) {
           e.preventDefault();
-          carsContainer.scrollLeft += e.deltaY * 3; // Increased scroll speed by 3x
+          carsContainer.scrollLeft -= e.deltaY * 1.5; // Increased scroll speed by 3x and reversed direction
         }
       };
       carsContainer.addEventListener('wheel', handleWheel, { passive: false });
@@ -246,18 +247,42 @@ const CarsStore = () => {
       const carsByMake = groupCarsByMake(cars);
       const makes = Object.keys(carsByMake);
       
-      if (!focusedCar && cars.length > 0) {
+      if (!focusedCar && !focusedMake && cars.length > 0) {
         setSelectedCarIndex(0);
         setFocusedCar(cars[0]);
         return;
       }
-    
       
       switch (key) {
         case "ArrowRight": {
           event.preventDefault();
-          if (!focusedCar) return;
+          if (!focusedCar && !focusedMake) return;
           
+          // If maker title is focused, move to the next maker title
+          if (focusedMake) {
+            const currentMakeIndex = makes.indexOf(focusedMake);
+            if (currentMakeIndex < makes.length - 1) {
+              const nextMake = makes[currentMakeIndex + 1];
+              setFocusedMake(nextMake);
+              
+              // Scroll to the next maker title
+              const nextMakeTitleElement = document.querySelector(`[data-make="${nextMake}"]`);
+              if (nextMakeTitleElement) {
+                nextMakeTitleElement.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center', 
+                  inline: 'center' 
+                });
+              }
+              
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
+            }
+            return;
+          }
+          
+          // If car is focused, find the next car in the same row
           const isInTopRow = allTopRowCars.includes(focusedCar);
           const currentArray = isInTopRow ? allTopRowCars : allBottomRowCars;
           const currentIndex = currentArray.indexOf(focusedCar);
@@ -274,8 +299,33 @@ const CarsStore = () => {
         
         case "ArrowLeft": {
           event.preventDefault();
-          if (!focusedCar) return;
+          if (!focusedCar && !focusedMake) return;
           
+          // If maker title is focused, move to the previous maker title
+          if (focusedMake) {
+            const currentMakeIndex = makes.indexOf(focusedMake);
+            if (currentMakeIndex > 0) {
+              const prevMake = makes[currentMakeIndex - 1];
+              setFocusedMake(prevMake);
+              
+              // Scroll to the previous maker title
+              const prevMakeTitleElement = document.querySelector(`[data-make="${prevMake}"]`);
+              if (prevMakeTitleElement) {
+                prevMakeTitleElement.scrollIntoView({ 
+                  behavior: 'smooth', 
+                  block: 'center', 
+                  inline: 'center' 
+                });
+              }
+              
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
+            }
+            return;
+          }
+          
+          // If car is focused, find the previous car in the same row
           const isInTopRow = allTopRowCars.includes(focusedCar);
           const currentArray = isInTopRow ? allTopRowCars : allBottomRowCars;
           const currentIndex = currentArray.indexOf(focusedCar);
@@ -292,29 +342,38 @@ const CarsStore = () => {
         
         case "ArrowDown": {
           event.preventDefault();
-          if (!focusedCar) return;
+          if (!focusedCar && !focusedMake) return;
           
-          const carsByMake = groupCarsByMake(cars);
+          // If maker title is focused, move to the first car in the top row
+          if (focusedMake) {
+            const makeCars = carsByMake[focusedMake] || [];
+            const makeTopRow = makeCars.filter((_, i) => i % 2 === 0);
+            
+            if (makeTopRow.length > 0) {
+              setFocusedCar(makeTopRow[0]);
+              setFocusedMake(null);
+              if (soundEffectsOn || soundEffectsOnQuickSettings) {
+                playSwitchSound();
+              }
+            }
+            return;
+          }
+          
+          // If top row car is focused, move to the corresponding bottom row car
           const currentMake = focusedCar.make?.trim().toUpperCase() || "UNKNOWN";
           const makeCars = carsByMake[currentMake] || [];
-          
-          // Sort make's cars and split into rows
           const sortedMakeCars = makeCars.sort((a, b) => 
             `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`));
           const makeTopRow = sortedMakeCars.filter((_, i) => i % 2 === 0);
           const makeBottomRow = sortedMakeCars.filter((_, i) => i % 2 === 1);
-
-          // Find position in make's top row
+          
           const topRowIndex = makeTopRow.findIndex(c => c.id === focusedCar.id);
-
-          if (topRowIndex !== -1) {
-            const makeBottomRow = sortedMakeCars.filter((_, i) => i % 2 === 1);
-            if (topRowIndex < makeBottomRow.length) {
-              const nextCar = makeBottomRow[topRowIndex];
-              setFocusedCar(nextCar);
-              if (soundEffectsOn || soundEffectsOnQuickSettings) {
-                playSwitchSound();
-              }
+          
+          if (topRowIndex !== -1 && topRowIndex < makeBottomRow.length) {
+            const nextCar = makeBottomRow[topRowIndex];
+            setFocusedCar(nextCar);
+            if (soundEffectsOn || soundEffectsOnQuickSettings) {
+              playSwitchSound();
             }
           }
           break;
@@ -322,27 +381,39 @@ const CarsStore = () => {
         
         case "ArrowUp": {
           event.preventDefault();
-          if (!focusedCar) return;
+          if (!focusedCar && !focusedMake) return;
           
-          const carsByMake = groupCarsByMake(cars);
+          // If maker title is focused, switch focus to header main menu
+          if (focusedMake) {
+            dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
+            dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
+            setFocusedMake(null);
+            if (soundEffectsOn || soundEffectsOnQuickSettings) {
+              playSwitchSound();
+            }
+            return;
+          }
+          
+          // If bottom row car is focused, move to the corresponding top row car
           const currentMake = focusedCar.make?.trim().toUpperCase() || "UNKNOWN";
           const makeCars = carsByMake[currentMake] || [];
-          
           const sortedMakeCars = makeCars.sort((a, b) => 
             `${a.make} ${a.model}`.localeCompare(`${b.make} ${b.model}`));
           const makeTopRow = sortedMakeCars.filter((_, i) => i % 2 === 0);
-          const topRowIndex = makeTopRow.findIndex(c => c.id === focusedCar.id);
           const makeBottomRow = sortedMakeCars.filter((_, i) => i % 2 === 1);
-          if (topRowIndex !== -1) {
-            setFocusedMake(makeTopRow[topRowIndex].make);
-          }
-
-          // Find position in make's bottom row
+          
           const bottomRowIndex = makeBottomRow.findIndex(c => c.id === focusedCar.id);
           
-          if (bottomRowIndex !== -1 && bottomRowIndex < makeTopRow.length) {
+          if (bottomRowIndex !== -1) {
             const prevCar = makeTopRow[bottomRowIndex];
             setFocusedCar(prevCar);
+            if (soundEffectsOn || soundEffectsOnQuickSettings) {
+              playSwitchSound();
+            }
+          } else {
+            // If top row car is focused, move to the maker title
+            setFocusedMake(currentMake);
+            setFocusedCar(null);
             if (soundEffectsOn || soundEffectsOnQuickSettings) {
               playSwitchSound();
             }
@@ -380,10 +451,9 @@ const CarsStore = () => {
     soundEffectsOn,
     soundEffectsOnQuickSettings,
     focusedCar,
+    focusedMake,
     allTopRowCars,
-    allBottomRowCars,
-    playSwitchSound,
-    playOpeningSound
+    allBottomRowCars
   ]);
 
   const buyCar = async (car) => {
@@ -493,8 +563,8 @@ const CarsStore = () => {
               });
 
               return (
-                <div key={make} className="make-section" data-make-index={makeIndex}>
-                  <h2 className="make-name" data-make={make} style={{border: focusedMake === make ? "4px solid #fff" : ""}}>{make}</h2>
+                <div key={make} className="make-section" data-make-index={makeIndex} data-focused={focusedMake === make}>
+                  <h2 className="make-name" data-make={make}>{make}</h2>
                   <div className="make-grid">
                     <div className="make-row">
                       {topRowCars.map((car) => {

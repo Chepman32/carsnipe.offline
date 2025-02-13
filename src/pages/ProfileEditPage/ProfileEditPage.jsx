@@ -22,7 +22,7 @@ import avatar16 from "../../assets/images/avatars/avatar16.png";
 import "./styles.css";
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { FOCUS_ZONES, HEADER_MAIN_MENU, setCurrentFocusedElement, setFocusedZone } from '../../redux/slices/focusSlice';
+import { FOCUS_ZONES, HEADER_MAIN_MENU, HEADER_SUB_MENU, setCurrentFocusedElement, setFocusedZone } from '../../redux/slices/focusSlice';
 import { setUserData, updateAvatar, updateUserPreferences } from '../../redux/slices/userSlice';
 
 const client = generateClient();
@@ -112,6 +112,94 @@ const ProfileEditPage = ({ signOut }) => {
       placement: 'topRight',
     });
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Prevent default if we're handling the key
+      const key = event.key;
+      
+      // Only handle navigation if in the profile edit page zone
+      if (focusedZone !== FOCUS_ZONES.PAGE) return;
+
+      switch (focusedElement) {
+        case 'avatars': {
+          const totalAvatars = avatars.length;
+
+          if (key === 'ArrowRight') {
+            setFocusedAvatarIndex((prev) => 
+              prev % avatarsPerRow === avatarsPerRow - 1 ? prev : prev + 1
+            );
+          } else if (key === 'ArrowLeft') {
+            setFocusedAvatarIndex((prev) => 
+              prev % avatarsPerRow === 0 ? prev : prev - 1
+            );
+          } else if (key === 'ArrowDown') {
+            setFocusedAvatarIndex((prev) => 
+              prev + avatarsPerRow < totalAvatars ? prev + avatarsPerRow : prev
+            );
+          } else if (key === 'ArrowUp') {
+            // If on top row, move focus to header zone
+            if (focusedAvatarIndex < avatarsPerRow) {
+              dispatch(setFocusedZone(FOCUS_ZONES.HEADER));
+              dispatch(setCurrentFocusedElement(HEADER_MAIN_MENU));
+            } else {
+              // Otherwise, move up to previous row
+              setFocusedAvatarIndex((prev) => prev - avatarsPerRow);
+            }
+          } else if (key === 'Enter') {
+            handleAvatarSelect(avatars[focusedAvatarIndex]);
+          } else if (key === 'Tab') {
+            event.preventDefault(); // Prevent default tab behavior
+            setFocusedElement('nickname');
+          }
+          break;
+        }
+        case 'nickname': {
+          if (key === 'ArrowUp') {
+            setFocusedElement('avatars');
+            // Set focus to the last row's equivalent column
+            const lastRowStartIndex = Math.floor((avatars.length - 1) / 4) * 4;
+            const columnIndex = focusedAvatarIndex % 4;
+            setFocusedAvatarIndex(Math.min(lastRowStartIndex + columnIndex, avatars.length - 1));
+          } else if (key === 'ArrowDown') {
+            setFocusedElement('bio');
+          }
+          break;
+        }
+        case 'bio': {
+          if (key === 'ArrowUp') {
+            setFocusedElement('nickname');
+          } else if (key === 'ArrowDown') {
+            setFocusedElement('submit');
+          }
+          break;
+        }
+        case 'submit': {
+          if (key === 'ArrowUp') {
+            setFocusedElement('bio');
+          } else if (key === 'ArrowDown') {
+            setFocusedElement('signout');
+          } else if (key === 'Enter') {
+            form.submit();
+          }
+          break;
+        }
+        case 'signout': {
+          if (key === 'ArrowUp') {
+            setFocusedElement('submit');
+          } else if (key === 'Enter') {
+            handleSignOut();
+          }
+          break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [focusedElement, focusedAvatarIndex, focusedZone, avatars.length, dispatch]);
 
   return (
     <>

@@ -83,8 +83,11 @@ const focusSlice = createSlice({
               state.currentQuickMenuItem = QUICK_MENU_DARK_MODE;
               return;
             }
-            if (state.currentRoute === "/carsStore" || state.currentRoute === "/myCars") {
-              console.log("myCars")
+            if (
+              state.currentRoute === "/carsStore" ||
+              state.currentRoute === "/myCars"
+            ) {
+              console.log("myCars");
               state.focusedZone = FOCUS_ZONES.PAGE;
               state.currentFocusedElement = TOP_CAR;
             } else if (state.currentRoute === "/store") {
@@ -106,6 +109,17 @@ const focusSlice = createSlice({
           break;
         }
         case FOCUS_ZONES.PAGE: {
+          if (state.currentRoute === "/profileEditPage") {
+            if (key === "ArrowUp") {
+              if (state.currentFocusedElement === "") {
+                state.currentFocusedElement = "avatars";
+              }
+            } else if (key === "ArrowDown") {
+              if (state.currentFocusedElement === "") {
+                state.currentFocusedElement = "avatars";
+              }
+            }
+          }
           if (key === "ArrowDown") {
             if (state.currentFocusedElement === TOP_CAR) {
               state.currentFocusedElement = "";
@@ -117,7 +131,9 @@ const focusSlice = createSlice({
           if (key === "ArrowUp") {
             if (state.currentSettingsElement === SETTINGS_MUSIC_VOLUME) {
               state.currentSettingsElement = SETTINGS_SOUND_EFFECTS;
-            } else if (state.currentSettingsElement === SETTINGS_SOUND_EFFECTS) {
+            } else if (
+              state.currentSettingsElement === SETTINGS_SOUND_EFFECTS
+            ) {
               state.currentSettingsElement = SETTINGS_DARK_MODE;
               state.currentFocusedElement = SETTINGS_DARK_MODE;
             } else if (state.currentSettingsElement === SETTINGS_DARK_MODE) {
@@ -179,7 +195,10 @@ const focusSlice = createSlice({
               state.currentQuickMenuItem = QUICK_MENU_STATION;
             } else if (state.currentFocusedElement === QUICK_MENU_STATION) {
               state.focusedZone = FOCUS_ZONES.PAGE;
-              if (state.currentRoute === "/carsStore" || state.currentRoute === "/myCars") {
+              if (
+                state.currentRoute === "/carsStore" ||
+                state.currentRoute === "/myCars"
+              ) {
                 state.currentFocusedElement = TOP_CAR;
               } else if (state.currentRoute === "/profileEditPage") {
                 state.currentFocusedElement = "avatars";

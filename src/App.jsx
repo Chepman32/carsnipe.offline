@@ -44,7 +44,7 @@ function BackspaceHandler() {
       );
 
       // Only navigate back if backspace is pressed and no editable element is focused
-      if (event.key === 'Backspace' && !isEditableElement) {
+      if ((event.key === 'Backspace' || event.key === 'Escape') && !isEditableElement) {
         navigate(-1);
       }
     };
